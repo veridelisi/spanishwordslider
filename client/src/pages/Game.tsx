@@ -25,8 +25,8 @@ const Game: React.FC = () => {
   } = useGameLogic();
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-slate-50 font-[Open_Sans]">
-      <div className="w-full max-w-5xl">
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-to-b from-indigo-50 to-blue-100 font-[Open_Sans]">
+      <div className="w-full max-w-6xl">
         <GameHeader />
         
         {!isGameActive && !isGameOver && (

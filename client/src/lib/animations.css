@@ -1,9 +1,9 @@
 @keyframes slideLeft {
   0% {
-    transform: translateX(120%); /* Start further right */
+    transform: translateX(150%); /* Start even further right */
   }
   100% {
-    transform: translateX(-120%); /* End further left */
+    transform: translateX(-150%); /* End even further left */
   }
 }
 

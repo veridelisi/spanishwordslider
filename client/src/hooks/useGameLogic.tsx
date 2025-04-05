@@ -53,22 +53,30 @@ export default function useGameLogic() {
   function createAnimation() {
     if (!slidingWordRef.current) return;
     
-    // Reset the element - remove any existing inline styles
+    // Complete reset of the element by removing all inline styles
+    slidingWordRef.current.style.cssText = '';
     slidingWordRef.current.style.animation = 'none';
     slidingWordRef.current.offsetHeight; // Trigger reflow
     
-    // Clear existing animation style
-    slidingWordRef.current.style.animation = '';
+    // Apply a single animation string for better cross-browser consistency
+    const animationStyle = `slideLeft ${currentSpeed/1000}s linear forwards`;
+    slidingWordRef.current.style.animation = animationStyle;
     
-    // Use CSS-based animation with inline custom duration
-    slidingWordRef.current.style.animationName = 'slideLeft';
-    slidingWordRef.current.style.animationDuration = `${currentSpeed / 1000}s`;
-    slidingWordRef.current.style.animationTimingFunction = 'linear';
-    slidingWordRef.current.style.animationFillMode = 'forwards';
+    // Ensure the element is visible and positioned correctly
+    slidingWordRef.current.style.display = 'flex';
+    slidingWordRef.current.style.opacity = '1';
     
-    // Get the animation object
-    setTimeout(() => { // Add a small delay to ensure animation is registered
+    // Get the animation object with a slightly longer delay to ensure it's registered
+    setTimeout(() => {
+      // Cancel any existing animations first
+      if (animationRef.current) {
+        animationRef.current.cancel();
+        animationRef.current = null;
+      }
+      
+      // Get fresh animations
       const animations = slidingWordRef.current?.getAnimations() || [];
+      
       if (animations.length > 0) {
         animationRef.current = animations[0];
         
@@ -85,8 +93,10 @@ export default function useGameLogic() {
             }
           }
         };
+      } else {
+        console.log("No animations found for the sliding word");
       }
-    }, 50);
+    }, 100);
     
     // Pronounce the word after a delay
     if (isSoundEnabled && currentWord) {
@@ -101,10 +111,22 @@ export default function useGameLogic() {
     const word = getRandomWord();
     setCurrentWord(word);
     
-    // Schedule animation on next tick to ensure DOM is updated
+    // Reset any existing animation before applying a new one
+    if (slidingWordRef.current) {
+      slidingWordRef.current.style.animation = "none";
+      slidingWordRef.current.offsetHeight; // Trigger reflow
+    }
+    
+    // Ensure all previous animations are properly cleared
+    if (animationRef.current) {
+      animationRef.current.cancel();
+      animationRef.current = null;
+    }
+    
+    // Schedule animation with a longer delay to ensure DOM is fully updated
     setTimeout(() => {
       createAnimation();
-    }, 0);
+    }, 50);
   }
   
   // Complete current word

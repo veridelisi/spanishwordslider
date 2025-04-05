@@ -25,16 +25,16 @@ const GameViewport: React.FC<GameViewportProps> = ({
 }) => {
   return (
     <div className="game-container p-6 relative">
-      {/* Sliding Word Area */}
-      <div className="word-container h-32 flex items-center justify-center rounded-lg bg-slate-100 mb-6 relative shadow-inner perspective-1000 w-full overflow-hidden">
+      {/* Sliding Word Area - Enhanced with improved styling and better width */}
+      <div className="word-container h-48 flex items-center justify-center rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 mb-8 relative shadow-lg perspective-1000 w-full overflow-hidden border border-indigo-100">
         <div 
           ref={slidingWordRef}
-          className={`absolute font-[Poppins] text-3xl font-semibold tracking-wide flex items-center h-full ${
+          className={`absolute font-[Poppins] text-5xl font-semibold tracking-wider flex items-center h-full ${
             !currentWord ? "hidden" : "animate-slide-left"
           }`}
         >
           {currentWord.split("").map((char, index) => {
-            let className = "spanish-word-char px-1 text-slate-700";
+            let className = "spanish-word-char px-1 text-slate-800 transition-all duration-300";
             
             // Normalize function for Spanish characters
             const normalizeChar = (c: string) => {
@@ -47,14 +47,14 @@ const GameViewport: React.FC<GameViewportProps> = ({
               
               if (userInput[index].toLowerCase() === char.toLowerCase() || 
                   normalizedUserChar === normalizedWordChar) {
-                className = "spanish-word-char px-1 text-green-500 font-bold scale-110";
+                className = "spanish-word-char px-1 text-green-500 font-bold transform scale-110 transition-all duration-300";
               } else {
-                className = "spanish-word-char px-1 text-red-500";
+                className = "spanish-word-char px-1 text-red-500 transition-all duration-300";
               }
             }
             
             return (
-              <span key={index} className={className}>
+              <span key={index} className={className} style={{textShadow: "1px 1px 2px rgba(0,0,0,0.1)"}}>
                 {char}
               </span>
             );
