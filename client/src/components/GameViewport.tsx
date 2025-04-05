@@ -4,6 +4,7 @@ import { Volume2 } from "lucide-react";
 import ExplosionEffect from "./ExplosionEffect";
 import VirtualKeyboard from "./VirtualKeyboard";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { isSpeechSupported } from "@/lib/speechUtils";
 
 interface GameViewportProps {
   currentWord: string;
@@ -32,15 +33,23 @@ const GameViewport: React.FC<GameViewportProps> = ({
   const [isSpeaking, setIsSpeaking] = useState(false);
   const isMobile = useIsMobile();
   
-  // Enhanced pronunciateWord function with visual feedback
+  // Enhanced pronunciateWord function with visual feedback regardless of speech success
   const handlePronunciateWord = () => {
+    // Immediately show visual feedback
     setIsSpeaking(true);
+    
+    // Try to pronounce the word
     pronunciateWord();
     
-    // Reset speaking state after a short delay
+    // Reset speaking state after a delay (keeps visual effect visible for a moment)
     setTimeout(() => {
       setIsSpeaking(false);
-    }, 1500);
+    }, 1200);
+    
+    // If the browser doesn't support speech synthesis or fails, at least show a message
+    if (!isSpeechSupported() || !window.speechSynthesis) {
+      console.log("Speech synthesis may not be fully supported in this browser");
+    }
   };
   
   // Handle virtual keyboard key press
@@ -219,6 +228,13 @@ const GameViewport: React.FC<GameViewportProps> = ({
         <p className="text-sm text-slate-500 mt-3 text-center">
           Type the complete word before it slides off the screen
         </p>
+        {currentWord && (
+          <div className="mt-2 bg-yellow-50 border border-yellow-200 rounded-md p-2">
+            <p className="text-xs text-yellow-700">
+              <span className="font-medium">Note:</span> Sound may not work in all browsers. Click the sound icon to hear "{currentWord}" pronounced, or use an external Spanish pronunciation resource.
+            </p>
+          </div>
+        )}
       </div>
       
       {/* Render explosion effects */}
