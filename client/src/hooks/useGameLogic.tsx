@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { speakWord, isSpeechSupported } from '@/lib/speechUtils';
+import { speakWord, isSpeechSupported, forceExternalApi } from '@/lib/speechUtils';
 
 // Sample Spanish words for testing
 const words = [
@@ -93,7 +93,17 @@ export default function useGameLogic() {
         // Speak the word if sound is enabled
         if (isSoundEnabled && newWord) {
           logDebug("Speaking word:", newWord);
-          speakWord(newWord);
+          
+          // Using async/await with try/catch for better error handling
+          (async () => {
+            try {
+              await speakWord(newWord);
+            } catch (error) {
+              console.error("Error speaking word:", error);
+              // If Web Speech API fails, try with external API
+              forceExternalApi();
+            }
+          })();
         }
         
         // Start tracking the animation for game over condition
@@ -166,17 +176,27 @@ export default function useGameLogic() {
           // Always attempt to speak the word initially for better user experience
           // Add a short delay to ensure animation has started before speaking
           setTimeout(() => {
-            try {
-              // Cancel any previous speech
-              if (window.speechSynthesis) {
-                window.speechSynthesis.cancel();
-              }
-              
-              speakWord(newWord);
-              logDebug("Speaking new word:", newWord);
-            } catch (err) {
-              console.error("Error speaking word:", err);
+            // Cancel any previous speech
+            if (window.speechSynthesis) {
+              window.speechSynthesis.cancel();
             }
+            
+            // Using async/await with IIFE pattern for better error handling
+            (async () => {
+              try {
+                logDebug("Speaking new word:", newWord);
+                await speakWord(newWord);
+              } catch (err) {
+                console.error("Error speaking word:", err);
+                // If regular speech fails, try with external API
+                forceExternalApi();
+                try {
+                  await speakWord(newWord);
+                } catch (fallbackErr) {
+                  console.error("Fallback speech also failed:", fallbackErr);
+                }
+              }
+            })();
           }, 300); // Small delay to ensure animation has started
           
           // Start animation tracking
@@ -233,17 +253,27 @@ export default function useGameLogic() {
             // Always attempt to speak the word initially for better user experience
             // Add a short delay to ensure animation has started before speaking
             setTimeout(() => {
-              try {
-                // Cancel any previous speech
-                if (window.speechSynthesis) {
-                  window.speechSynthesis.cancel();
-                }
-                
-                speakWord(newWord);
-                logDebug("Speaking next word after completion:", newWord);
-              } catch (err) {
-                console.error("Error speaking word:", err);
+              // Cancel any previous speech
+              if (window.speechSynthesis) {
+                window.speechSynthesis.cancel();
               }
+              
+              // Using async/await with IIFE pattern for better error handling
+              (async () => {
+                try {
+                  logDebug("Speaking next word after completion:", newWord);
+                  await speakWord(newWord);
+                } catch (err) {
+                  console.error("Error speaking word:", err);
+                  // If regular speech fails, try with external API
+                  forceExternalApi();
+                  try {
+                    await speakWord(newWord);
+                  } catch (fallbackErr) {
+                    console.error("Fallback speech also failed:", fallbackErr);
+                  }
+                }
+              })();
             }, 300); // Small delay to ensure animation has started
             
             createAnimation();
@@ -305,16 +335,29 @@ export default function useGameLogic() {
   
   // Pronounce the current word on demand
   const pronunciateWord = useCallback(() => {
-    if (currentWord && isSpeechSupported()) {
+    if (currentWord) {
       // Cancel any ongoing speech
       if (window.speechSynthesis) {
         window.speechSynthesis.cancel();
       }
       
       // Small delay to ensure UI updates before speaking
-      setTimeout(() => {
+      setTimeout(async () => {
         logDebug("User clicked to pronounce:", currentWord);
-        speakWord(currentWord);
+        try {
+          await speakWord(currentWord);
+          logDebug("Pronunciation completed successfully");
+        } catch (error) {
+          logDebug("Error in pronunciation:", error);
+          // If the Web Speech API fails, force the external API
+          forceExternalApi();
+          // Try again with the external API
+          try {
+            await speakWord(currentWord);
+          } catch (secondError) {
+            console.error("Both speech methods failed:", secondError);
+          }
+        }
       }, 100);
     }
   }, [currentWord]);

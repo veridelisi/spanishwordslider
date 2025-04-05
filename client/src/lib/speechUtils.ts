@@ -1,7 +1,10 @@
+import { speakTextWithExternalApi } from './assemblyAiService';
+
 // Initialize speech synthesis
 let voices: SpeechSynthesisVoice[] = [];
 let voicesLoaded = false;
 let voicesLoadedPromise: Promise<SpeechSynthesisVoice[]> | null = null;
+let useExternalApiFlag = false; // Flag to use external API
 
 /**
  * Load and cache available voices, handling the asynchronous nature of voice loading
@@ -13,6 +16,7 @@ function loadVoices(): Promise<SpeechSynthesisVoice[]> {
   voicesLoadedPromise = new Promise((resolve) => {
     if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
       console.log("Speech synthesis not supported in this environment");
+      useExternalApiFlag = true; // Use external API as fallback
       resolve([]);
       return;
     }
@@ -37,6 +41,15 @@ function loadVoices(): Promise<SpeechSynthesisVoice[]> {
       voicesLoaded = true;
       resolve(loadedVoices);
     };
+    
+    // Set a timeout to switch to external API if voices don't load in 3 seconds
+    setTimeout(() => {
+      if (!voicesLoaded) {
+        console.log("Voice loading timed out, will try external API");
+        useExternalApiFlag = true;
+        resolve([]);
+      }
+    }, 3000);
   });
   
   return voicesLoadedPromise;
@@ -45,22 +58,53 @@ function loadVoices(): Promise<SpeechSynthesisVoice[]> {
 // Start loading voices immediately
 if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
   loadVoices();
+} else {
+  useExternalApiFlag = true;
 }
 
 /**
- * Speaks a word in Spanish using Web Speech API with retries
+ * Set whether to use the external API for speech
  */
-export function speakWord(word: string): void {
+export function setUseExternalApi(value: boolean): void {
+  useExternalApiFlag = value;
+}
+
+/**
+ * Get current flag for using external API
+ */
+export function getUseExternalApi(): boolean {
+  return useExternalApiFlag;
+}
+
+/**
+ * Speaks a word in Spanish using Web Speech API with external API fallback
+ */
+export async function speakWord(word: string): Promise<void> {
+  // If external API is preferred, use it directly
+  if (useExternalApiFlag) {
+    try {
+      console.log("Using external TTS API for:", word);
+      await speakTextWithExternalApi(word, 'es');
+      return;
+    } catch (error) {
+      console.error("External TTS API failed, trying Web Speech API:", error);
+      // Fall through to Web Speech API as last resort
+    }
+  }
+
+  // Try Web Speech API
   if (!isSpeechSupported()) {
     console.log("Speech synthesis not supported");
     return;
   }
   
-  // Cancel any ongoing speech
-  window.speechSynthesis.cancel();
-  
-  // Ensure voices are loaded before speaking
-  loadVoices().then((availableVoices) => {
+  try {
+    // Cancel any ongoing speech
+    window.speechSynthesis.cancel();
+    
+    // Ensure voices are loaded before speaking
+    const availableVoices = await loadVoices();
+    
     const utterance = new SpeechSynthesisUtterance(word);
     utterance.lang = 'es-ES';  // Spanish (Spain)
     utterance.rate = 0.8;      // Slightly slower than normal
@@ -74,16 +118,38 @@ export function speakWord(word: string): void {
       utterance.voice = spanishVoice;
     }
     
-    // Add event listeners to track speech status
-    utterance.onstart = () => console.log("Speaking:", word);
-    utterance.onend = () => console.log("Finished speaking:", word);
-    utterance.onerror = (event) => console.error("Speech error:", event.error);
+    // Wrap in a promise to catch errors
+    await new Promise<void>((resolve, reject) => {
+      // Add event listeners to track speech status
+      utterance.onstart = () => console.log("Speaking:", word);
+      utterance.onend = () => {
+        console.log("Finished speaking:", word);
+        resolve();
+      };
+      utterance.onerror = (event) => {
+        console.error("Speech error:", event.error);
+        reject(new Error(`Speech error: ${event.error}`));
+      };
+      
+      // Speak the word
+      window.speechSynthesis.speak(utterance);
+      
+      // Safety timeout in case onend never fires
+      setTimeout(() => resolve(), 5000);
+    });
+  } catch (error) {
+    console.error("Error in speech synthesis:", error);
     
-    // Speak the word
-    window.speechSynthesis.speak(utterance);
-  }).catch(error => {
-    console.error("Error loading voices:", error);
-  });
+    // Attempt to use external API as fallback if Web Speech API fails
+    if (!useExternalApiFlag) {
+      try {
+        console.log("Web Speech API failed, trying external API");
+        await speakTextWithExternalApi(word, 'es');
+      } catch (fallbackError) {
+        console.error("External API fallback also failed:", fallbackError);
+      }
+    }
+  }
 }
 
 /**
@@ -102,5 +168,16 @@ export function preloadSpeechSynthesis(): void {
     loadVoices().then(voices => {
       console.log("Speech synthesis preloaded with", voices.length, "voices");
     });
+  } else {
+    console.log("Speech synthesis not supported, will use external API");
+    useExternalApiFlag = true;
   }
+}
+
+/**
+ * Force the use of external API for all speech
+ */
+export function forceExternalApi(): void {
+  useExternalApiFlag = true;
+  console.log("Forced use of external API for speech");
 }

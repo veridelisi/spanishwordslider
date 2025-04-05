@@ -4,7 +4,7 @@ import { Volume2 } from "lucide-react";
 import ExplosionEffect from "./ExplosionEffect";
 import VirtualKeyboard from "./VirtualKeyboard";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { isSpeechSupported } from "@/lib/speechUtils";
+import { isSpeechSupported, getUseExternalApi, forceExternalApi } from "@/lib/speechUtils";
 
 interface GameViewportProps {
   currentWord: string;
@@ -31,7 +31,17 @@ const GameViewport: React.FC<GameViewportProps> = ({
   const [explosions, setExplosions] = useState<Array<{id: number, x: number, y: number}>>([]);
   const [explosionCounter, setExplosionCounter] = useState(0);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [isExternalApi, setIsExternalApi] = useState(getUseExternalApi());
   const isMobile = useIsMobile();
+  
+  // Force external API on component mount if speech is not supported
+  useEffect(() => {
+    if (!isSpeechSupported() || !window.speechSynthesis) {
+      console.log("Speech synthesis not available, forcing external API");
+      forceExternalApi();
+      setIsExternalApi(true);
+    }
+  }, []);
   
   // Enhanced pronunciateWord function with visual feedback regardless of speech success
   const handlePronunciateWord = () => {
@@ -44,12 +54,10 @@ const GameViewport: React.FC<GameViewportProps> = ({
     // Reset speaking state after a delay (keeps visual effect visible for a moment)
     setTimeout(() => {
       setIsSpeaking(false);
-    }, 1200);
+    }, 2000); // Longer timeout for external API which might take longer
     
-    // If the browser doesn't support speech synthesis or fails, at least show a message
-    if (!isSpeechSupported() || !window.speechSynthesis) {
-      console.log("Speech synthesis may not be fully supported in this browser");
-    }
+    // Update external API state
+    setIsExternalApi(getUseExternalApi());
   };
   
   // Handle virtual keyboard key press
@@ -231,8 +239,17 @@ const GameViewport: React.FC<GameViewportProps> = ({
         {currentWord && (
           <div className="mt-2 bg-yellow-50 border border-yellow-200 rounded-md p-2">
             <p className="text-xs text-yellow-700">
-              <span className="font-medium">Note:</span> Sound may not work in all browsers. Click the sound icon to hear "{currentWord}" pronounced, or use an external Spanish pronunciation resource.
+              <span className="font-medium">Note:</span> {isExternalApi 
+                ? `Using external API for pronunciation. Click the sound icon to hear "${currentWord}" pronounced.` 
+                : `Click the sound icon to hear "${currentWord}" pronounced. If sound doesn't work, the app will automatically switch to a more compatible method.`
+              }
             </p>
+            {isSpeaking && (
+              <div className="mt-1 flex items-center">
+                <span className="inline-block h-2 w-2 rounded-full bg-green-500 animate-ping mr-2"></span>
+                <span className="text-xs text-green-700 font-medium">Playing audio...</span>
+              </div>
+            )}
           </div>
         )}
       </div>
