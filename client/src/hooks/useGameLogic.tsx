@@ -31,13 +31,13 @@ export default function useGameLogic() {
   const wordsRef = useRef<Word[]>([]);
   
   // Fetch words from API
-  const { data: words } = useQuery({
+  const { data: words } = useQuery<Word[]>({
     queryKey: ['/api/words'],
     staleTime: Infinity,
   });
   
   useEffect(() => {
-    if (words && words.length > 0) {
+    if (words && Array.isArray(words) && words.length > 0) {
       wordsRef.current = words;
     }
   }, [words]);
@@ -58,7 +58,7 @@ export default function useGameLogic() {
     slidingWordRef.current.offsetHeight; // Trigger reflow
     
     // Start new animation
-    slidingWordRef.current.style.animation = `slide-left ${currentSpeed / 1000}s linear forwards`;
+    slidingWordRef.current.style.animation = `slideLeft ${currentSpeed / 1000}s linear forwards`;
     
     // Get the animation object
     const animations = slidingWordRef.current.getAnimations();
@@ -101,7 +101,7 @@ export default function useGameLogic() {
     
     // Apply blow-away animation
     if (slidingWordRef.current) {
-      slidingWordRef.current.style.animation = 'blow-away 0.5s ease-out forwards';
+      slidingWordRef.current.style.animation = 'blowAway 0.5s ease-out forwards';
     }
     
     // Update score and progress

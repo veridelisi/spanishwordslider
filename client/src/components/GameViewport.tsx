@@ -52,13 +52,7 @@ const GameViewport: React.FC<GameViewportProps> = ({
           })}
         </div>
 
-        {/* Game Start Prompt */}
-        {!isGameActive && !currentWord && (
-          <div className="text-center animate-bounce-subtle">
-            <p className="text-indigo-500 font-semibold text-xl mb-2">Press Enter to Start</p>
-            <span className="text-slate-400 text-sm">Words will slide from right to left</span>
-          </div>
-        )}
+        {/* Game Start Prompt - now handled in the Game component */}
       </div>
 
       {/* Input Area */}

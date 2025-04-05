@@ -3,6 +3,7 @@ import GameHeader from "@/components/GameHeader";
 import GameInterface from "@/components/GameInterface";
 import GameOverModal from "@/components/GameOverModal";
 import useGameLogic from "@/hooks/useGameLogic";
+import { Button } from "@/components/ui/button";
 
 const Game: React.FC = () => {
   const {
@@ -26,6 +27,20 @@ const Game: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-slate-50 font-[Open_Sans]">
       <GameHeader />
+      
+      {!isGameActive && !isGameOver && (
+        <div className="mb-6 flex flex-col items-center">
+          <Button 
+            onClick={startGame}
+            className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-lg transition-colors shadow-md text-xl"
+          >
+            Start Game
+          </Button>
+          <p className="text-sm text-slate-500 mt-2">
+            or press Enter to begin
+          </p>
+        </div>
+      )}
       
       <GameInterface
         score={score}
