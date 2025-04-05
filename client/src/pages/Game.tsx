@@ -5,6 +5,7 @@ import GameOverModal from "@/components/GameOverModal";
 import useGameLogic from "@/hooks/useGameLogic";
 import { Button } from "@/components/ui/button";
 import { PlayIcon } from "lucide-react";
+import { preloadSpeechSynthesis } from "@/lib/speechUtils";
 
 const Game: React.FC = () => {
   const {
@@ -26,6 +27,12 @@ const Game: React.FC = () => {
     changeGameSpeed,
   } = useGameLogic();
 
+  // Preload the speech synthesis system when the component mounts
+  useEffect(() => {
+    console.log("Preloading speech synthesis...");
+    preloadSpeechSynthesis();
+  }, []);
+  
   // Focus the input when the game starts
   useEffect(() => {
     if (isGameActive && inputRef.current) {
