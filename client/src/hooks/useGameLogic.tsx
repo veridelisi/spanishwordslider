@@ -24,6 +24,11 @@ const gameSpeeds = {
   fast: 7000       // 7 seconds to cross the screen
 };
 
+// Add simple debugging
+function logDebug(message: string, ...args: any[]) {
+  console.log(message, ...args);
+}
+
 export default function useGameLogic() {
   const [score, setScore] = useState(0);
   const [level, setLevel] = useState(1);
@@ -52,10 +57,16 @@ export default function useGameLogic() {
   
   // Start a new word
   const startNewWord = useCallback(() => {
-    if (!isGameActive) return;
+    logDebug("startNewWord called, isGameActive:", isGameActive);
+    if (!isGameActive) {
+      logDebug("Game not active, not starting word");
+      return;
+    }
     
     const newWord = getRandomWord();
-    console.log("New word selected:", newWord);
+    logDebug("New word selected:", newWord);
+    
+    // First set the word in state
     setCurrentWord(newWord);
     setUsedWords(prev => [...prev, newWord]);
     setUserInput('');
@@ -65,22 +76,32 @@ export default function useGameLogic() {
       inputRef.current.focus();
     }
     
-    // Apply animation to the word - with a slight delay to ensure DOM update
+    // Apply animation to the word - with a longer delay to ensure DOM update is complete
     setTimeout(() => {
+      logDebug("Setting up animation for word:", newWord);
       if (slidingWordRef.current) {
-        console.log("Setting animation for word:", newWord);
+        // Reset animation before setting new one
         slidingWordRef.current.style.animation = 'none';
-        void slidingWordRef.current.offsetWidth; // Trigger reflow
-        slidingWordRef.current.style.animation = `slideLeft ${gameSpeeds[gameSpeed]}ms linear forwards`;
+        // Force a reflow to ensure animation reset is applied
+        void slidingWordRef.current.offsetWidth;
+        
+        // Apply the animation with the selected speed
+        const duration = gameSpeeds[gameSpeed];
+        logDebug("Animation duration:", duration);
+        slidingWordRef.current.style.animation = `slideLeft ${duration}ms linear forwards`;
+        
+        // Speak the word if sound is enabled
+        if (isSoundEnabled && newWord) {
+          logDebug("Speaking word:", newWord);
+          speakWord(newWord);
+        }
+        
+        // Start tracking the animation for game over condition
+        createAnimation();
+      } else {
+        logDebug("slidingWordRef is null, cannot apply animation");
       }
-      
-      // Speak the word if sound is enabled
-      if (isSoundEnabled) {
-        speakWord(newWord);
-      }
-      
-      createAnimation();
-    }, 50);
+    }, 150); // Longer delay to ensure DOM updates completely
   }, [isGameActive, getRandomWord, isSoundEnabled, gameSpeed]);
   
   // Create the sliding animation and handle game over
@@ -111,6 +132,7 @@ export default function useGameLogic() {
   
   // Start a new game
   const startNewGame = useCallback(() => {
+    logDebug("Starting a new game");
     setScore(0);
     setLevel(1);
     setCurrentWord('');
@@ -126,10 +148,10 @@ export default function useGameLogic() {
     
     // Start the first word after a short delay to ensure DOM is ready
     setTimeout(() => {
+      logDebug("DOM should be ready, calling startNewWord");
       startNewWord();
-      console.log("Starting new word:", currentWord);
-    }, 100);
-  }, [startNewWord, currentWord]);
+    }, 300);
+  }, [startNewWord]);
   
   // Handle completing a word
   const completeWord = useCallback(() => {
