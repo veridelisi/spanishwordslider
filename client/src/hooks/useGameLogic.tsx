@@ -5,9 +5,9 @@ import { Word } from "@shared/schema";
 
 // Game configuration
 const GAME_CONFIG = {
-  baseSpeed: 10000, // Base speed for word sliding in ms
+  baseSpeed: 15000, // Base speed for word sliding in ms - slower for better gameplay
   speedIncrement: 500, // How much to decrease time per level
-  minSpeed: 4000, // Minimum sliding speed
+  minSpeed: 6000, // Minimum sliding speed - keep it slower
   wordsPerLevel: 5, // Words to complete before level up
   pronounceDelay: 500, // Delay before pronunciation in ms
 };
@@ -130,12 +130,23 @@ export default function useGameLogic() {
     // Reset input
     setUserInput("");
     
-    // Start new word after animation
+    // Flag to track if startNewWord was called
+    let newWordStarted = false;
+    
+    // Start new word after animation with a reliable timeout
     setTimeout(() => {
-      if (isGameActive && !isGameOver) {
+      if (isGameActive && !isGameOver && !newWordStarted) {
+        newWordStarted = true;
         startNewWord();
       }
-    }, 600);
+    }, 800); // Slightly longer delay to ensure word appears
+    
+    // Backup timer in case the first one fails
+    setTimeout(() => {
+      if (isGameActive && !isGameOver && currentWord === "") {
+        startNewWord();
+      }
+    }, 2000);
   }, [currentWord, level, isGameActive, isGameOver, startNewWord]);
   
   // End the game
@@ -149,13 +160,22 @@ export default function useGameLogic() {
     }
   }, []);
   
-  // Input handling
+  // Input handling with special Spanish character normalization
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const input = e.target.value.toLowerCase();
     setUserInput(input);
     
-    // Check if word is complete
+    // Function to normalize strings for comparison (removing accents)
+    const normalizeString = (str: string) => {
+      return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    };
+    
+    // Check if word is complete - using direct comparison first
     if (input === currentWord.toLowerCase()) {
+      handleWordCompletion();
+    } 
+    // Then check with normalized strings (without accents)
+    else if (normalizeString(input) === normalizeString(currentWord.toLowerCase())) {
       handleWordCompletion();
     }
   }, [currentWord, handleWordCompletion]);

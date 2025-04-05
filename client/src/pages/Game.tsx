@@ -26,42 +26,44 @@ const Game: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-slate-50 font-[Open_Sans]">
-      <GameHeader />
-      
-      {!isGameActive && !isGameOver && (
-        <div className="mb-6 flex flex-col items-center">
-          <Button 
-            onClick={startGame}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-lg transition-colors shadow-md text-xl"
-          >
-            Start Game
-          </Button>
-          <p className="text-sm text-slate-500 mt-2">
-            or press Enter to begin
-          </p>
-        </div>
-      )}
-      
-      <GameInterface
-        score={score}
-        level={level}
-        currentWord={currentWord}
-        userInput={userInput}
-        isGameActive={isGameActive}
-        isSoundEnabled={isSoundEnabled}
-        slidingWordRef={slidingWordRef}
-        inputRef={inputRef}
-        handleInputChange={handleInputChange}
-        handleKeyDown={handleKeyDown}
-        toggleSound={toggleSound}
-        pronunciateWord={pronunciateWord}
-      />
-      
-      <GameOverModal
-        isGameOver={isGameOver}
-        score={score}
-        onRestart={restartGame}
-      />
+      <div className="w-full max-w-5xl">
+        <GameHeader />
+        
+        {!isGameActive && !isGameOver && (
+          <div className="mb-6 flex flex-col items-center">
+            <Button 
+              onClick={startGame}
+              className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-lg transition-colors shadow-md text-xl"
+            >
+              Start Game
+            </Button>
+            <p className="text-sm text-slate-500 mt-2">
+              or press Enter to begin
+            </p>
+          </div>
+        )}
+        
+        <GameInterface
+          score={score}
+          level={level}
+          currentWord={currentWord}
+          userInput={userInput}
+          isGameActive={isGameActive}
+          isSoundEnabled={isSoundEnabled}
+          slidingWordRef={slidingWordRef}
+          inputRef={inputRef}
+          handleInputChange={handleInputChange}
+          handleKeyDown={handleKeyDown}
+          toggleSound={toggleSound}
+          pronunciateWord={pronunciateWord}
+        />
+        
+        <GameOverModal
+          isGameOver={isGameOver}
+          score={score}
+          onRestart={restartGame}
+        />
+      </div>
     </div>
   );
 };

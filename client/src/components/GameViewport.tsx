@@ -26,7 +26,7 @@ const GameViewport: React.FC<GameViewportProps> = ({
   return (
     <div className="game-container p-6 relative">
       {/* Sliding Word Area */}
-      <div className="word-container h-24 flex items-center justify-center rounded-lg bg-slate-100 mb-6 relative shadow-inner perspective-1000">
+      <div className="word-container h-32 flex items-center justify-center rounded-lg bg-slate-100 mb-6 relative shadow-inner perspective-1000 w-full">
         <div 
           ref={slidingWordRef}
           className={`absolute font-[Poppins] text-3xl font-semibold tracking-wide flex items-center h-full ${
@@ -36,8 +36,17 @@ const GameViewport: React.FC<GameViewportProps> = ({
           {currentWord.split("").map((char, index) => {
             let className = "spanish-word-char px-1 text-slate-700";
             
+            // Normalize function for Spanish characters
+            const normalizeChar = (c: string) => {
+              return c.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            };
+            
             if (index < userInput.length) {
-              if (userInput[index].toLowerCase() === char.toLowerCase()) {
+              const normalizedUserChar = userInput[index] ? normalizeChar(userInput[index].toLowerCase()) : '';
+              const normalizedWordChar = normalizeChar(char.toLowerCase());
+              
+              if (userInput[index].toLowerCase() === char.toLowerCase() || 
+                  normalizedUserChar === normalizedWordChar) {
                 className = "spanish-word-char px-1 text-green-500 font-bold scale-110";
               } else {
                 className = "spanish-word-char px-1 text-red-500";
