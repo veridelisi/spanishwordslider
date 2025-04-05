@@ -147,36 +147,88 @@ export default function useGameLogic() {
     }
     
     // Start the first word after a short delay to ensure DOM is ready
-    setTimeout(() => {
-      logDebug("DOM should be ready, calling startNewWord");
-      startNewWord();
+    // We need to use a standard function for the setTimeout to maintain the correct isGameActive value
+    setTimeout(function() {
+      const newWord = getRandomWord();
+      logDebug("Starting with word:", newWord);
+      
+      // Set the current word state
+      setCurrentWord(newWord);
+      setUsedWords(prev => [...prev, newWord]);
+      
+      // Apply animation in a nested timeout to ensure state updates
+      setTimeout(() => {
+        if (slidingWordRef.current) {
+          slidingWordRef.current.style.animation = 'none';
+          void slidingWordRef.current.offsetWidth; // Trigger reflow
+          slidingWordRef.current.style.animation = `slideLeft ${gameSpeeds[gameSpeed]}ms linear forwards`;
+          
+          // Speak the word if sound is enabled
+          if (isSoundEnabled) {
+            speakWord(newWord);
+          }
+          
+          // Start animation tracking
+          createAnimation();
+        }
+      }, 100);
     }, 300);
-  }, [startNewWord]);
+  }, [getRandomWord, gameSpeed, isSoundEnabled]);
   
   // Handle completing a word
   const completeWord = useCallback(() => {
+    logDebug("Word completed correctly:", currentWord);
+    
     // Cancel the animation
     if (animationRef.current) {
       cancelAnimationFrame(animationRef.current);
     }
     
     // Update score and level
-    setScore(prev => prev + (currentWord.length * 10));
+    const wordPoints = currentWord.length * 10;
+    logDebug("Adding points:", wordPoints);
+    setScore(prev => prev + wordPoints);
     
     // Increase level every 5 words
     if (score > 0 && score % 100 === 0) {
+      logDebug("Leveling up!");
       setLevel(prev => prev + 1);
     }
     
-    // Clear the input and current word (triggers the explosion effect)
+    // Clear the input first to trigger explosion effect in GameViewport component
     setUserInput('');
-    setCurrentWord('');
     
-    // Start a new word after a short delay
+    // Short delay before clearing current word to ensure explosion triggers
     setTimeout(() => {
-      startNewWord();
-    }, 800);
-  }, [currentWord, score, startNewWord]);
+      logDebug("Clearing current word for explosion effect");
+      setCurrentWord('');
+      
+      // Start a new word after a delay to allow for explosion animation
+      setTimeout(() => {
+        logDebug("Starting next word after explosion");
+        // Use our direct word generation approach instead of startNewWord to avoid isGameActive issues
+        const newWord = getRandomWord();
+        logDebug("New word selected:", newWord);
+        setCurrentWord(newWord);
+        setUsedWords(prev => [...prev, newWord]);
+        
+        // Apply animation after a short delay to ensure DOM updates
+        setTimeout(() => {
+          if (slidingWordRef.current) {
+            slidingWordRef.current.style.animation = 'none';
+            void slidingWordRef.current.offsetWidth; // Trigger reflow
+            slidingWordRef.current.style.animation = `slideLeft ${gameSpeeds[gameSpeed]}ms linear forwards`;
+            
+            if (isSoundEnabled) {
+              speakWord(newWord);
+            }
+            
+            createAnimation();
+          }
+        }, 100);
+      }, 800); // Delay to allow explosion animation to complete
+    }, 50);
+  }, [currentWord, score, getRandomWord, gameSpeed, isSoundEnabled]);
   
   // Check if the word is completed
   useEffect(() => {
