@@ -127,6 +127,7 @@ const GameViewport: React.FC<GameViewportProps> = ({
           className={`absolute font-[Poppins] text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-semibold tracking-wider flex items-center h-full ${
             !currentWord ? "hidden" : "animate-slide-left"
           }`}
+          style={currentWord ? { animation: `slideLeft ${isGameActive ? '10000ms' : '0s'} linear forwards` } : {}}
         >
           {currentWord.split("").map((char, index) => {
             let className = "spanish-word-char px-1 text-slate-800 transition-all duration-300";

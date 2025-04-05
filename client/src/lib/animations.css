@@ -1,9 +1,9 @@
 @keyframes slideLeft {
   0% {
-    transform: translateX(200%); /* Start much further right for longer sliding distance */
+    transform: translateX(100%); /* Start from the right edge */
   }
   100% {
-    transform: translateX(-200%); /* End much further left for longer sliding distance */
+    transform: translateX(-100%); /* End at the left edge */
   }
 }
 
