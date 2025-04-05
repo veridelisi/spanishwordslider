@@ -163,9 +163,12 @@ export default function useGameLogic() {
           void slidingWordRef.current.offsetWidth; // Trigger reflow
           slidingWordRef.current.style.animation = `slideLeft ${gameSpeeds[gameSpeed]}ms linear forwards`;
           
-          // Speak the word if sound is enabled
-          if (isSoundEnabled) {
+          // Always attempt to speak the word initially for better user experience
+          try {
             speakWord(newWord);
+            logDebug("Speaking new word:", newWord);
+          } catch (err) {
+            console.error("Error speaking word:", err);
           }
           
           // Start animation tracking
@@ -219,8 +222,11 @@ export default function useGameLogic() {
             void slidingWordRef.current.offsetWidth; // Trigger reflow
             slidingWordRef.current.style.animation = `slideLeft ${gameSpeeds[gameSpeed]}ms linear forwards`;
             
-            if (isSoundEnabled) {
+            // Always attempt to speak the word initially for better user experience
+            try {
               speakWord(newWord);
+            } catch (err) {
+              console.error("Error speaking word:", err);
             }
             
             createAnimation();

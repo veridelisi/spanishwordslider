@@ -29,7 +29,19 @@ const GameViewport: React.FC<GameViewportProps> = ({
   const [prevUserInput, setPrevUserInput] = useState("");
   const [explosions, setExplosions] = useState<Array<{id: number, x: number, y: number}>>([]);
   const [explosionCounter, setExplosionCounter] = useState(0);
+  const [isSpeaking, setIsSpeaking] = useState(false);
   const isMobile = useIsMobile();
+  
+  // Enhanced pronunciateWord function with visual feedback
+  const handlePronunciateWord = () => {
+    setIsSpeaking(true);
+    pronunciateWord();
+    
+    // Reset speaking state after a short delay
+    setTimeout(() => {
+      setIsSpeaking(false);
+    }, 1500);
+  };
   
   // Handle virtual keyboard key press
   const handleVirtualKeyPress = (key: string) => {
@@ -189,13 +201,19 @@ const GameViewport: React.FC<GameViewportProps> = ({
             disabled={!isGameActive}
           />
           <Button
-            variant="ghost"
+            variant="outline"
             size="icon"
-            onClick={pronunciateWord}
-            className="absolute right-2 top-1/2 transform -translate-y-1/2 text-indigo-400 hover:text-indigo-600 p-2 rounded-full transition-colors"
+            onClick={handlePronunciateWord}
+            className={`absolute right-2 top-1/2 transform -translate-y-1/2 p-2 rounded-full transition-all ${
+              isSpeaking 
+                ? "text-white bg-indigo-600 border-indigo-700 animate-pulse" 
+                : "text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 border-indigo-200"
+            }`}
             disabled={!isGameActive || !currentWord}
+            title="Click to hear pronunciation"
           >
             <Volume2 className="h-6 w-6" />
+            <span className="sr-only">Hear pronunciation</span>
           </Button>
         </div>
         <p className="text-sm text-slate-500 mt-3 text-center">
