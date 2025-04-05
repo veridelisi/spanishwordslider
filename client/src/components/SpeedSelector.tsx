@@ -1,6 +1,7 @@
-import React from "react";
+import React from 'react';
 import { Button } from "@/components/ui/button";
-import { GameSpeedSetting } from "@/hooks/useGameLogic";
+import { GameSpeedSetting } from '@/hooks/useGameLogic';
+import { RocketIcon, GaugeIcon, TimerIcon } from 'lucide-react';
 
 interface SpeedSelectorProps {
   currentSpeed: GameSpeedSetting;
@@ -8,49 +9,46 @@ interface SpeedSelectorProps {
   disabled?: boolean;
 }
 
-const SpeedSelector: React.FC<SpeedSelectorProps> = ({
-  currentSpeed,
+const SpeedSelector: React.FC<SpeedSelectorProps> = ({ 
+  currentSpeed, 
   onChange,
   disabled = false
 }) => {
+  const speeds: { value: GameSpeedSetting; label: string; icon: React.ReactNode }[] = [
+    { 
+      value: 'slow', 
+      label: 'Slow', 
+      icon: <TimerIcon className="h-4 w-4 mr-1" /> 
+    },
+    { 
+      value: 'medium', 
+      label: 'Medium', 
+      icon: <GaugeIcon className="h-4 w-4 mr-1" /> 
+    },
+    { 
+      value: 'fast', 
+      label: 'Fast', 
+      icon: <RocketIcon className="h-4 w-4 mr-1" /> 
+    },
+  ];
+  
   return (
-    <div className="flex flex-wrap justify-center gap-2 my-4">
-      <div className="w-full text-center mb-2 text-sm font-medium text-slate-600">
-        Select Game Speed:
-      </div>
-      <div className="flex gap-2 flex-wrap justify-center">
-        <Button
-          size="sm"
-          variant={currentSpeed === "slow" ? "default" : "outline"}
-          onClick={() => onChange("slow")}
-          disabled={disabled}
-          className={`${currentSpeed === "slow" ? "bg-green-600 hover:bg-green-700" : "border-green-300 text-green-700 hover:bg-green-50"}`}
-        >
-          Slow
-        </Button>
-        <Button
-          size="sm"
-          variant={currentSpeed === "medium" ? "default" : "outline"}
-          onClick={() => onChange("medium")}
-          disabled={disabled}
-          className={`${currentSpeed === "medium" ? "bg-blue-600 hover:bg-blue-700" : "border-blue-300 text-blue-700 hover:bg-blue-50"}`}
-        >
-          Medium
-        </Button>
-        <Button
-          size="sm"
-          variant={currentSpeed === "fast" ? "default" : "outline"}
-          onClick={() => onChange("fast")}
-          disabled={disabled}
-          className={`${currentSpeed === "fast" ? "bg-red-600 hover:bg-red-700" : "border-red-300 text-red-700 hover:bg-red-50"}`}
-        >
-          Fast
-        </Button>
-      </div>
-      <div className="w-full text-center mt-1 text-xs text-slate-500">
-        {currentSpeed === "slow" && "Perfect for beginners - words move slower"}
-        {currentSpeed === "medium" && "Standard speed - balanced difficulty"}
-        {currentSpeed === "fast" && "Challenge mode - for advanced players"}
+    <div className="speed-selector flex flex-col space-y-1 w-full">
+      <label className="text-sm text-slate-500 mb-1">Game Speed:</label>
+      <div className="flex space-x-2">
+        {speeds.map(speed => (
+          <Button
+            key={speed.value}
+            variant={currentSpeed === speed.value ? "default" : "outline"}
+            size="sm"
+            className="flex-1 flex items-center justify-center"
+            onClick={() => onChange(speed.value)}
+            disabled={disabled}
+          >
+            {speed.icon}
+            {speed.label}
+          </Button>
+        ))}
       </div>
     </div>
   );

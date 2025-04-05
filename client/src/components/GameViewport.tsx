@@ -1,6 +1,9 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Volume2 } from "lucide-react";
+import ExplosionEffect from "./ExplosionEffect";
+import VirtualKeyboard from "./VirtualKeyboard";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface GameViewportProps {
   currentWord: string;
@@ -23,6 +26,98 @@ const GameViewport: React.FC<GameViewportProps> = ({
   handleKeyDown,
   pronunciateWord,
 }) => {
+  const [prevUserInput, setPrevUserInput] = useState("");
+  const [explosions, setExplosions] = useState<Array<{id: number, x: number, y: number}>>([]);
+  const [explosionCounter, setExplosionCounter] = useState(0);
+  const isMobile = useIsMobile();
+  
+  // Handle virtual keyboard key press
+  const handleVirtualKeyPress = (key: string) => {
+    if (!isGameActive || !inputRef.current) return;
+    
+    // Create a synthetic event for the input change
+    const newValue = userInput + key;
+    const syntheticEvent = {
+      target: { value: newValue },
+      preventDefault: () => {},
+    } as React.ChangeEvent<HTMLInputElement>;
+    
+    handleInputChange(syntheticEvent);
+    
+    // Keep focus on the input after clicking the virtual keyboard
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  };
+  
+  // Handle virtual keyboard backspace
+  const handleVirtualBackspace = () => {
+    if (!isGameActive || !inputRef.current) return;
+    
+    // Remove the last character
+    const newValue = userInput.slice(0, -1);
+    const syntheticEvent = {
+      target: { value: newValue },
+      preventDefault: () => {},
+    } as React.ChangeEvent<HTMLInputElement>;
+    
+    handleInputChange(syntheticEvent);
+    
+    // Keep focus on the input
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  };
+  
+  // Handle virtual keyboard space
+  const handleVirtualSpace = () => {
+    if (!isGameActive || !inputRef.current) return;
+    
+    // Add a space
+    const newValue = userInput + " ";
+    const syntheticEvent = {
+      target: { value: newValue },
+      preventDefault: () => {},
+    } as React.ChangeEvent<HTMLInputElement>;
+    
+    handleInputChange(syntheticEvent);
+    
+    // Keep focus on the input
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  };
+
+  // Track user input to detect word completion
+  useEffect(() => {
+    // If the user input was reset after being the same length as current word,
+    // that means a word was completed successfully
+    if (prevUserInput.length === currentWord.length && userInput === "" && currentWord !== "") {
+      // Get the position of the word for explosion effect
+      if (slidingWordRef.current) {
+        const rect = slidingWordRef.current.getBoundingClientRect();
+        // Create explosion at the center of the word
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        
+        // Add new explosion with unique ID
+        setExplosions(prev => [...prev, {
+          id: explosionCounter,
+          x: centerX,
+          y: centerY
+        }]);
+        setExplosionCounter(prev => prev + 1);
+      }
+    }
+    
+    setPrevUserInput(userInput);
+  }, [userInput, currentWord, prevUserInput, slidingWordRef, explosionCounter]);
+
+  // Remove explosion after animation completes
+  const handleExplosionComplete = (id: number) => {
+    setExplosions(prev => prev.filter(exp => exp.id !== id));
+  };
+
   return (
     <div className="game-container p-3 sm:p-6 relative w-full">
       {/* Sliding Word Area - Enhanced with improved styling and better width, plus responsive height */}
@@ -93,6 +188,27 @@ const GameViewport: React.FC<GameViewportProps> = ({
           Type the complete word before it slides off the screen
         </p>
       </div>
+      
+      {/* Render explosion effects */}
+      {explosions.map(explosion => (
+        <ExplosionEffect
+          key={explosion.id}
+          position={{ x: explosion.x, y: explosion.y }}
+          onAnimationComplete={() => handleExplosionComplete(explosion.id)}
+        />
+      ))}
+      
+      {/* Virtual Keyboard for mobile devices */}
+      {isMobile && (
+        <div className="mt-4 sm:mt-6">
+          <VirtualKeyboard
+            onKeyPress={handleVirtualKeyPress}
+            onBackspace={handleVirtualBackspace}
+            onSpace={handleVirtualSpace}
+            disabled={!isGameActive}
+          />
+        </div>
+      )}
     </div>
   );
 };

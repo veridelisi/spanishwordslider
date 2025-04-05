@@ -1,7 +1,8 @@
 import React from "react";
 import StatusBar from "./StatusBar";
 import GameViewport from "./GameViewport";
-import GameInstructions from "./GameInstructions";
+import { GameSpeedSetting } from "@/hooks/useGameLogic";
+import SpeedSelector from "./SpeedSelector";
 
 interface GameInterfaceProps {
   score: number;
@@ -16,6 +17,8 @@ interface GameInterfaceProps {
   handleKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
   toggleSound: () => void;
   pronunciateWord: () => void;
+  currentSpeed: GameSpeedSetting;
+  onSpeedChange: (speed: GameSpeedSetting) => void;
 }
 
 const GameInterface: React.FC<GameInterfaceProps> = ({
@@ -31,10 +34,17 @@ const GameInterface: React.FC<GameInterfaceProps> = ({
   handleKeyDown,
   toggleSound,
   pronunciateWord,
+  currentSpeed,
+  onSpeedChange,
 }) => {
   return (
-    <main className="w-full max-w-4xl bg-white rounded-xl shadow-md overflow-hidden">
-      <StatusBar score={score} level={level} isSoundEnabled={isSoundEnabled} toggleSound={toggleSound} />
+    <div className="game-interface w-full max-w-3xl mx-auto flex flex-col px-4 sm:px-6">
+      <StatusBar
+        score={score}
+        level={level}
+        isSoundEnabled={isSoundEnabled}
+        toggleSound={toggleSound}
+      />
       
       <GameViewport
         currentWord={currentWord}
@@ -47,8 +57,14 @@ const GameInterface: React.FC<GameInterfaceProps> = ({
         pronunciateWord={pronunciateWord}
       />
       
-      <GameInstructions />
-    </main>
+      <div className="mt-4 sm:mt-6">
+        <SpeedSelector 
+          currentSpeed={currentSpeed}
+          onChange={onSpeedChange}
+          disabled={!isGameActive} 
+        />
+      </div>
+    </div>
   );
 };
 

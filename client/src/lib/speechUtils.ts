@@ -2,12 +2,20 @@
  * Speaks a word in Spanish using Web Speech API
  */
 export function speakWord(word: string): void {
-  // Cancel any ongoing speech
-  window.speechSynthesis.cancel();
+  if (!isSpeechSupported()) return;
   
   const utterance = new SpeechSynthesisUtterance(word);
-  utterance.lang = 'es-ES'; // Spanish language
-  utterance.rate = 0.9;     // Slightly slower rate for learning
+  utterance.lang = 'es-ES';  // Spanish (Spain)
+  utterance.rate = 0.8;      // Slightly slower than normal
+  utterance.pitch = 1.0;     // Normal pitch
+  
+  // Find a Spanish voice if available
+  const voices = window.speechSynthesis.getVoices();
+  const spanishVoice = voices.find(voice => voice.lang.startsWith('es'));
+  
+  if (spanishVoice) {
+    utterance.voice = spanishVoice;
+  }
   
   window.speechSynthesis.speak(utterance);
 }

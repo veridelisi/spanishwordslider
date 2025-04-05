@@ -1,315 +1,229 @@
-import { useState, useEffect, useRef, useCallback } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { speakWord } from "@/lib/speechUtils";
-import { Word } from "@shared/schema";
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { speakWord, isSpeechSupported } from '@/lib/speechUtils';
 
-// Game configuration with speed presets
-const SPEED_PRESETS = {
-  slow: {
-    baseSpeed: 20000, // Slower speed for beginners
-    speedIncrement: 500,
-    minSpeed: 8000
-  },
-  medium: {
-    baseSpeed: 15000, // Default medium speed
-    speedIncrement: 500,
-    minSpeed: 6000
-  },
-  fast: {
-    baseSpeed: 10000, // Faster speed for advanced players
-    speedIncrement: 400,
-    minSpeed: 4000
-  }
-};
+// Sample Spanish words for testing
+const words = [
+  "hola", "adiós", "gracias", "por favor", "buenos días",
+  "buenas tardes", "buenas noches", "mañana", "tarde", "noche",
+  "agua", "comida", "libro", "teléfono", "computadora",
+  "casa", "familia", "amigo", "tiempo", "trabajo",
+  "escuela", "universidad", "profesor", "estudiante", "niño",
+  "perro", "gato", "animal", "ciudad", "país",
+  "año", "mes", "semana", "día", "hora",
+  "minuto", "segundo", "rojo", "azul", "verde",
+  "negro", "blanco", "amarillo", "naranja", "morado",
+  "grande", "pequeño", "alto", "bajo", "feliz"
+];
 
-// Initial game configuration
-const GAME_CONFIG = {
-  ...SPEED_PRESETS.medium, // Default to medium speed
-  wordsPerLevel: 5, // Words to complete before level up
-  pronounceDelay: 500, // Delay before pronunciation in ms
-};
-
-// Type for game speed settings
 export type GameSpeedSetting = 'slow' | 'medium' | 'fast';
 
+// Game speeds in milliseconds for animation duration
+const gameSpeeds = {
+  slow: 15000,     // 15 seconds to cross the screen
+  medium: 10000,   // 10 seconds to cross the screen
+  fast: 7000       // 7 seconds to cross the screen
+};
+
 export default function useGameLogic() {
-  // Game state
   const [score, setScore] = useState(0);
   const [level, setLevel] = useState(1);
-  const [wordsCompleted, setWordsCompleted] = useState(0);
-  const [currentWord, setCurrentWord] = useState("");
-  const [userInput, setUserInput] = useState("");
-  const [isGameActive, setIsGameActive] = useState(false);
+  const [currentWord, setCurrentWord] = useState('');
+  const [userInput, setUserInput] = useState('');
   const [isGameOver, setIsGameOver] = useState(false);
-  const [currentSpeed, setCurrentSpeed] = useState(GAME_CONFIG.baseSpeed);
+  const [isGameActive, setIsGameActive] = useState(false);
   const [isSoundEnabled, setIsSoundEnabled] = useState(true);
-  const [speedSetting, setSpeedSetting] = useState<GameSpeedSetting>("medium");
+  const [usedWords, setUsedWords] = useState<string[]>([]);
+  const [gameSpeed, setGameSpeed] = useState<GameSpeedSetting>('medium');
   
-  // Refs
   const slidingWordRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const animationRef = useRef<Animation | null>(null);
-  const wordsRef = useRef<Word[]>([]);
+  const animationRef = useRef<number | null>(null);
   
-  // Fetch words from API
-  const { data: words } = useQuery<Word[]>({
-    queryKey: ['/api/words'],
-    staleTime: Infinity,
-  });
-  
-  useEffect(() => {
-    if (words && Array.isArray(words) && words.length > 0) {
-      wordsRef.current = words;
-    }
-  }, [words]);
-  
-  // Get a random word
+  // Get a random word that hasn't been used yet
   const getRandomWord = useCallback(() => {
-    if (!wordsRef.current.length) return "";
-    const randomIndex = Math.floor(Math.random() * wordsRef.current.length);
-    return wordsRef.current[randomIndex].word;
-  }, []);
-
-  // Create word animation - defined here to avoid circular dependencies
-  function createAnimation() {
-    if (!slidingWordRef.current) return;
-    
-    // Complete reset of the element by removing all inline styles
-    slidingWordRef.current.style.cssText = '';
-    slidingWordRef.current.style.animation = 'none';
-    slidingWordRef.current.offsetHeight; // Trigger reflow
-    
-    // Apply a single animation string for better cross-browser consistency
-    const animationStyle = `slideLeft ${currentSpeed/1000}s linear forwards`;
-    slidingWordRef.current.style.animation = animationStyle;
-    
-    // Ensure the element is visible and positioned correctly
-    slidingWordRef.current.style.display = 'flex';
-    slidingWordRef.current.style.opacity = '1';
-    
-    // Get the animation object with a slightly longer delay to ensure it's registered
-    setTimeout(() => {
-      // Cancel any existing animations first
-      if (animationRef.current) {
-        animationRef.current.cancel();
-        animationRef.current = null;
-      }
-      
-      // Get fresh animations
-      const animations = slidingWordRef.current?.getAnimations() || [];
-      
-      if (animations.length > 0) {
-        animationRef.current = animations[0];
-        
-        // Set up animation end listener
-        animationRef.current.onfinish = () => {
-          if (isGameActive && !isGameOver) {
-            // End the game when animation finishes
-            setIsGameActive(false);
-            setIsGameOver(true);
-            
-            // Stop any ongoing animations
-            if (animationRef.current) {
-              animationRef.current.pause();
-            }
-          }
-        };
-      } else {
-        console.log("No animations found for the sliding word");
-      }
-    }, 100);
-    
-    // Pronounce the word after a delay
-    if (isSoundEnabled && currentWord) {
-      setTimeout(() => {
-        speakWord(currentWord);
-      }, GAME_CONFIG.pronounceDelay);
+    const availableWords = words.filter(word => !usedWords.includes(word));
+    if (availableWords.length === 0) {
+      // Reset used words if all words have been used
+      setUsedWords([]);
+      return words[Math.floor(Math.random() * words.length)];
     }
-  }
+    return availableWords[Math.floor(Math.random() * availableWords.length)];
+  }, [usedWords]);
   
-  // Start a new word function
-  function startNew() {
-    const word = getRandomWord();
-    setCurrentWord(word);
+  // Start a new word
+  const startNewWord = useCallback(() => {
+    if (!isGameActive) return;
     
-    // Reset any existing animation before applying a new one
-    if (slidingWordRef.current) {
-      slidingWordRef.current.style.animation = "none";
-      slidingWordRef.current.offsetHeight; // Trigger reflow
-    }
+    const newWord = getRandomWord();
+    setCurrentWord(newWord);
+    setUsedWords(prev => [...prev, newWord]);
+    setUserInput('');
     
-    // Ensure all previous animations are properly cleared
-    if (animationRef.current) {
-      animationRef.current.cancel();
-      animationRef.current = null;
-    }
-    
-    // Schedule animation with a longer delay to ensure DOM is fully updated
-    setTimeout(() => {
-      createAnimation();
-    }, 50);
-  }
-  
-  // Complete current word
-  function completeWord() {
-    // Stop current animation
-    if (animationRef.current) {
-      animationRef.current.pause();
-    }
-    
-    // Apply blow-away animation
-    if (slidingWordRef.current) {
-      slidingWordRef.current.style.animation = 'blowAway 0.5s ease-out forwards';
-    }
-    
-    // Update score and progress
-    const wordScore = currentWord.length * level;
-    setScore(prevScore => prevScore + wordScore);
-    setWordsCompleted(prev => {
-      const newCount = prev + 1;
-      
-      // Check for level up
-      if (newCount >= GAME_CONFIG.wordsPerLevel) {
-        setLevel(prevLevel => {
-          const newLevel = prevLevel + 1;
-          // Increase speed with level
-          setCurrentSpeed(Math.max(
-            GAME_CONFIG.minSpeed, 
-            GAME_CONFIG.baseSpeed - (newLevel - 1) * GAME_CONFIG.speedIncrement
-          ));
-          return newLevel;
-        });
-        return 0; // Reset words completed
-      }
-      
-      return newCount;
-    });
-    
-    // Reset input
-    setUserInput("");
-    
-    // Flag to track if startNewWord was called
-    let newWordStarted = false;
-    
-    // Start new word after animation with a reliable timeout
-    setTimeout(() => {
-      if (isGameActive && !isGameOver && !newWordStarted) {
-        newWordStarted = true;
-        startNew();
-      }
-    }, 800); // Slightly longer delay to ensure word appears
-    
-    // Backup timer in case the first one fails
-    setTimeout(() => {
-      if (isGameActive && !isGameOver && currentWord === "") {
-        startNew();
-      }
-    }, 2000);
-  }
-  
-  // Expose callbacks with proper memoization
-  const startNewWord = useCallback(startNew, [getRandomWord, isGameActive, isGameOver, currentSpeed, isSoundEnabled, currentWord]);
-  
-  const handleWordCompletion = useCallback(completeWord, [currentWord, level, isGameActive, isGameOver, startNewWord]);
-  
-  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const input = e.target.value.toLowerCase();
-    setUserInput(input);
-    
-    // Function to normalize strings for comparison (removing accents)
-    const normalizeString = (str: string) => {
-      return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-    };
-    
-    // Check if word is complete - using direct comparison first
-    if (input === currentWord.toLowerCase()) {
-      handleWordCompletion();
-    } 
-    // Then check with normalized strings (without accents)
-    else if (normalizeString(input) === normalizeString(currentWord.toLowerCase())) {
-      handleWordCompletion();
-    }
-  }, [currentWord, handleWordCompletion]);
-  
-  const startGame = useCallback(() => {
-    // Reset game state
-    setScore(0);
-    setLevel(1);
-    setWordsCompleted(0);
-    setCurrentWord("");
-    setUserInput("");
-    setIsGameActive(true);
-    setIsGameOver(false);
-    setCurrentSpeed(GAME_CONFIG.baseSpeed);
-    
-    // Focus input and start first word
+    // Focus the input field
     if (inputRef.current) {
       inputRef.current.focus();
     }
+    
+    // Apply animation to the word
+    if (slidingWordRef.current) {
+      slidingWordRef.current.style.animationDuration = `${gameSpeeds[gameSpeed]}ms`;
+    }
+    
+    // Speak the word if sound is enabled
+    if (isSoundEnabled) {
+      speakWord(newWord);
+    }
+    
+    createAnimation();
+  }, [isGameActive, getRandomWord, isSoundEnabled, gameSpeed]);
+  
+  // Create the sliding animation and handle game over
+  function createAnimation() {
+    // Clear any existing animation
+    if (animationRef.current) {
+      cancelAnimationFrame(animationRef.current);
+    }
+    
+    const startTime = Date.now();
+    const duration = gameSpeeds[gameSpeed];
+    
+    const animate = () => {
+      const elapsedTime = Date.now() - startTime;
+      
+      if (elapsedTime >= duration) {
+        // Word reached the end, game over
+        setIsGameOver(true);
+        setIsGameActive(false);
+        return;
+      }
+      
+      animationRef.current = requestAnimationFrame(animate);
+    };
+    
+    animationRef.current = requestAnimationFrame(animate);
+  }
+  
+  // Start a new game
+  const startNewGame = useCallback(() => {
+    setScore(0);
+    setLevel(1);
+    setCurrentWord('');
+    setUserInput('');
+    setIsGameOver(false);
+    setIsGameActive(true);
+    setUsedWords([]);
+    
+    // Focus the input field
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+    
+    // Start the first word
     startNewWord();
   }, [startNewWord]);
   
+  // Handle completing a word
+  const completeWord = useCallback(() => {
+    // Cancel the animation
+    if (animationRef.current) {
+      cancelAnimationFrame(animationRef.current);
+    }
+    
+    // Update score and level
+    setScore(prev => prev + (currentWord.length * 10));
+    
+    // Increase level every 5 words
+    if (score > 0 && score % 100 === 0) {
+      setLevel(prev => prev + 1);
+    }
+    
+    // Clear the input and current word (triggers the explosion effect)
+    setUserInput('');
+    setCurrentWord('');
+    
+    // Start a new word after a short delay
+    setTimeout(() => {
+      startNewWord();
+    }, 800);
+  }, [currentWord, score, startNewWord]);
+  
+  // Check if the word is completed
+  useEffect(() => {
+    if (currentWord && userInput.toLowerCase() === currentWord.toLowerCase()) {
+      completeWord();
+    }
+  }, [userInput, currentWord, completeWord]);
+  
+  // Handle input change
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setUserInput(e.target.value);
+  }, []);
+  
+  // Handle key down events
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
-      if (!isGameActive && !isGameOver) {
-        startGame();
+      // Check if the current word is completed
+      if (userInput.toLowerCase() === currentWord.toLowerCase()) {
+        completeWord();
       }
     }
-  }, [isGameActive, isGameOver, startGame]);
+  }, [userInput, currentWord, completeWord]);
   
-  const restartGame = useCallback(() => {
-    setIsGameOver(false);
-    setTimeout(() => {
-      startGame();
-    }, 300);
-  }, [startGame]);
-  
+  // Toggle sound
   const toggleSound = useCallback(() => {
     setIsSoundEnabled(prev => !prev);
   }, []);
   
+  // Pronounce the current word
   const pronunciateWord = useCallback(() => {
-    if (currentWord && isSoundEnabled) {
+    if (currentWord && isSpeechSupported()) {
       speakWord(currentWord);
     }
-  }, [currentWord, isSoundEnabled]);
+  }, [currentWord]);
   
-  // Function to change the game speed
+  // Change game speed
   const changeGameSpeed = useCallback((speed: GameSpeedSetting) => {
-    setSpeedSetting(speed);
+    setGameSpeed(speed);
     
-    // Update the game configuration based on the selected speed
-    const newConfig = SPEED_PRESETS[speed];
-    
-    // Update the game settings
-    Object.assign(GAME_CONFIG, {
-      ...GAME_CONFIG,
-      ...newConfig
-    });
-    
-    // Update current speed if not in game, otherwise it will update on next level
-    if (!isGameActive) {
-      setCurrentSpeed(newConfig.baseSpeed);
+    // Update animation duration if a word is already active
+    if (slidingWordRef.current && currentWord) {
+      slidingWordRef.current.style.animationDuration = `${gameSpeeds[speed]}ms`;
+      
+      // Reset the animation
+      slidingWordRef.current.style.animation = 'none';
+      void slidingWordRef.current.offsetWidth; // Trigger reflow
+      slidingWordRef.current.style.animation = `slideLeft ${gameSpeeds[speed]}ms linear forwards`;
+      
+      // Re-create the animation timer
+      createAnimation();
     }
-  }, [isGameActive]);
+  }, [currentWord]);
+  
+  // Stop all animations when the component unmounts
+  useEffect(() => {
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
+  }, []);
   
   return {
     score,
     level,
     currentWord,
     userInput,
-    isGameActive,
     isGameOver,
+    isGameActive,
     isSoundEnabled,
-    speedSetting,
     slidingWordRef,
     inputRef,
+    gameSpeed,
+    startNewGame,
     handleInputChange,
     handleKeyDown,
     toggleSound,
     pronunciateWord,
-    startGame,
-    restartGame,
     changeGameSpeed,
   };
 }

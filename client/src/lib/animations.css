@@ -12,13 +12,43 @@
     transform: scale(1) rotate(0);
     opacity: 1;
   }
+  25% {
+    transform: scale(1.5) rotate(3deg);
+    opacity: 0.8;
+  }
   50% {
-    transform: scale(1.2) rotate(5deg);
-    opacity: 0.7;
+    transform: scale(1.8) rotate(5deg);
+    opacity: 0.5;
   }
   100% {
     transform: scale(0) rotate(15deg);
     opacity: 0;
+  }
+}
+
+@keyframes explosion {
+  0% {
+    transform: scale(0);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.5);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(2.5);
+    opacity: 0;
+  }
+}
+
+@keyframes particleDrift {
+  0% { 
+    transform: translate(0, 0) rotate(0deg); 
+    opacity: 1; 
+  }
+  100% { 
+    transform: translate(var(--x, 100px), var(--y, 100px)) rotate(var(--r, 180deg)); 
+    opacity: 0; 
   }
 }
 
@@ -48,6 +78,15 @@
   animation: blowAway 0.5s ease-out forwards;
 }
 
+.animate-explosion {
+  animation: explosion 0.6s ease-out forwards;
+}
+
+.animate-particle {
+  position: absolute;
+  animation: particleDrift 1s ease-out forwards;
+}
+
 .animate-fade-in {
   animation: fadeIn 0.3s ease-in-out;
 }
@@ -62,4 +101,32 @@
 
 .spanish-word-char {
   transition: color 0.2s ease, transform 0.2s ease;
+}
+
+/* Explosion particle animation */
+@keyframes explosion-particle {
+  0% {
+    transform: translate(-50%, -50%) scale(0.8);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(calc(-50% + var(--end-x)), calc(-50% + var(--end-y))) scale(0.1);
+    opacity: 0;
+  }
+}
+
+/* Explosion center flash animation */
+@keyframes explosion-center {
+  0% {
+    transform: translate(-50%, -50%) scale(0.1);
+    opacity: 1;
+  }
+  30% {
+    transform: translate(-50%, -50%) scale(1.5);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(0.5);
+    opacity: 0;
+  }
 }

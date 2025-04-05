@@ -1,58 +1,74 @@
-import React from "react";
+import React from 'react';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle,
+  DialogDescription,
+  DialogFooter 
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import SpeedSelector from "@/components/SpeedSelector";
-import { GameSpeedSetting } from "@/hooks/useGameLogic";
+import { GameSpeedSetting } from '@/hooks/useGameLogic';
+import SpeedSelector from './SpeedSelector';
 
 interface GameOverModalProps {
   isGameOver: boolean;
   score: number;
   onRestart: () => void;
-  currentSpeed?: GameSpeedSetting;
-  onSpeedChange?: (speed: GameSpeedSetting) => void;
+  currentSpeed: GameSpeedSetting;
+  onSpeedChange: (speed: GameSpeedSetting) => void;
 }
 
 const GameOverModal: React.FC<GameOverModalProps> = ({ 
   isGameOver, 
   score, 
   onRestart,
-  currentSpeed = "medium",
+  currentSpeed,
   onSpeedChange
 }) => {
-  if (!isGameOver) return null;
-  
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fade-in">
-      <div className="bg-white rounded-xl p-8 max-w-md w-full mx-4 shadow-2xl">
-        <div className="text-center">
-          <h2 className="text-3xl font-bold text-red-500 font-[Nunito] mb-4">Game Over!</h2>
-          <p className="text-xl text-slate-700 mb-2">Your score:</p>
-          <p className="text-4xl font-bold text-indigo-600 mb-6">{score}</p>
-        </div>
+    <Dialog open={isGameOver} onOpenChange={() => {}}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="text-center text-2xl font-bold">Game Over</DialogTitle>
+          <DialogDescription className="text-center">
+            <div className="mt-4 mb-6">
+              <p className="text-lg font-medium">Your Score</p>
+              <p className="text-3xl font-bold text-indigo-600">{score}</p>
+            </div>
+          </DialogDescription>
+        </DialogHeader>
         
-        {/* Speed selector in game over modal */}
-        {onSpeedChange && (
-          <div className="mb-4">
-            <SpeedSelector
+        <div className="flex flex-col space-y-4">
+          <div className="bg-slate-50 p-4 rounded-lg">
+            <SpeedSelector 
               currentSpeed={currentSpeed}
               onChange={onSpeedChange}
               disabled={false}
             />
+            <p className="text-xs text-slate-500 mt-2 text-center">
+              Adjust speed before starting a new game
+            </p>
           </div>
-        )}
-        
-        <div className="border-t border-slate-200 pt-6 mt-2">
-          <p className="text-slate-600 mb-6 text-center">
-            You've learned some Spanish words! Want to practice more?
-          </p>
-          <Button
-            onClick={onRestart}
-            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg transition-colors shadow-md"
-          >
-            Play Again
-          </Button>
+          
+          <div className="flex flex-col space-y-2">
+            <Button 
+              onClick={onRestart}
+              size="lg"
+              className="w-full"
+            >
+              Play Again
+            </Button>
+          </div>
         </div>
-      </div>
-    </div>
+        
+        <DialogFooter className="mt-4">
+          <div className="w-full text-center text-sm text-slate-500">
+            Practice makes perfect! Keep learning Spanish words.
+          </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };
 
