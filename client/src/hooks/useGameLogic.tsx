@@ -164,12 +164,20 @@ export default function useGameLogic() {
           slidingWordRef.current.style.animation = `slideLeft ${gameSpeeds[gameSpeed]}ms linear forwards`;
           
           // Always attempt to speak the word initially for better user experience
-          try {
-            speakWord(newWord);
-            logDebug("Speaking new word:", newWord);
-          } catch (err) {
-            console.error("Error speaking word:", err);
-          }
+          // Add a short delay to ensure animation has started before speaking
+          setTimeout(() => {
+            try {
+              // Cancel any previous speech
+              if (window.speechSynthesis) {
+                window.speechSynthesis.cancel();
+              }
+              
+              speakWord(newWord);
+              logDebug("Speaking new word:", newWord);
+            } catch (err) {
+              console.error("Error speaking word:", err);
+            }
+          }, 300); // Small delay to ensure animation has started
           
           // Start animation tracking
           createAnimation();
@@ -223,11 +231,20 @@ export default function useGameLogic() {
             slidingWordRef.current.style.animation = `slideLeft ${gameSpeeds[gameSpeed]}ms linear forwards`;
             
             // Always attempt to speak the word initially for better user experience
-            try {
-              speakWord(newWord);
-            } catch (err) {
-              console.error("Error speaking word:", err);
-            }
+            // Add a short delay to ensure animation has started before speaking
+            setTimeout(() => {
+              try {
+                // Cancel any previous speech
+                if (window.speechSynthesis) {
+                  window.speechSynthesis.cancel();
+                }
+                
+                speakWord(newWord);
+                logDebug("Speaking next word after completion:", newWord);
+              } catch (err) {
+                console.error("Error speaking word:", err);
+              }
+            }, 300); // Small delay to ensure animation has started
             
             createAnimation();
           }
@@ -286,10 +303,19 @@ export default function useGameLogic() {
     setIsSoundEnabled(prev => !prev);
   }, []);
   
-  // Pronounce the current word
+  // Pronounce the current word on demand
   const pronunciateWord = useCallback(() => {
     if (currentWord && isSpeechSupported()) {
-      speakWord(currentWord);
+      // Cancel any ongoing speech
+      if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+      
+      // Small delay to ensure UI updates before speaking
+      setTimeout(() => {
+        logDebug("User clicked to pronounce:", currentWord);
+        speakWord(currentWord);
+      }, 100);
     }
   }, [currentWord]);
   
