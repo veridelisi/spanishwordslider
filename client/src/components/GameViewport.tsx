@@ -125,9 +125,17 @@ const GameViewport: React.FC<GameViewportProps> = ({
     return currentWord.split("").map((char, index) => {
       let className = "spanish-word-char px-1 text-slate-800 transition-all duration-300";
       
-      // Normalize function for Spanish characters
+      // Enhanced normalize function for Spanish characters
       const normalizeChar = (c: string) => {
-        return c.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        // First normalize using NFD (decomposition)
+        const normalized = c.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        
+        // Special case for ñ/Ñ which should normalize to n/N
+        if (c === 'ñ' || c === 'Ñ') {
+          return 'n';
+        }
+        
+        return normalized.toLowerCase();
       };
       
       if (index < userInput.length) {

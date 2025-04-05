@@ -230,12 +230,29 @@ export default function useGameLogic() {
     }, 50);
   }, [currentWord, score, getRandomWord, gameSpeed, isSoundEnabled]);
   
-  // Check if the word is completed
+  // Normalize function for Spanish characters
+  const normalizeSpanishText = useCallback((text: string) => {
+    // First normalize using NFD (decomposition)
+    const normalized = text.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    
+    // Special case for ñ/Ñ which should normalize to n/N
+    return normalized.toLowerCase().replace(/[ñÑ]/g, 'n');
+  }, []);
+  
+  // Check if the word is completed (with Spanish character normalization)
   useEffect(() => {
-    if (currentWord && userInput.toLowerCase() === currentWord.toLowerCase()) {
+    if (!currentWord || !userInput) return;
+    
+    const normalizedInput = normalizeSpanishText(userInput);
+    const normalizedWord = normalizeSpanishText(currentWord);
+    
+    // Check exact match or normalized match
+    if (userInput.toLowerCase() === currentWord.toLowerCase() || 
+        normalizedInput === normalizedWord) {
+      logDebug("Word completed (normalized):", userInput, "=", currentWord);
       completeWord();
     }
-  }, [userInput, currentWord, completeWord]);
+  }, [userInput, currentWord, completeWord, normalizeSpanishText]);
   
   // Handle input change
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -245,12 +262,18 @@ export default function useGameLogic() {
   // Handle key down events
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
-      // Check if the current word is completed
-      if (userInput.toLowerCase() === currentWord.toLowerCase()) {
+      // Check if the current word is completed using same normalization logic
+      if (!currentWord || !userInput) return;
+      
+      const normalizedInput = normalizeSpanishText(userInput);
+      const normalizedWord = normalizeSpanishText(currentWord);
+      
+      if (userInput.toLowerCase() === currentWord.toLowerCase() || 
+          normalizedInput === normalizedWord) {
         completeWord();
       }
     }
-  }, [userInput, currentWord, completeWord]);
+  }, [userInput, currentWord, completeWord, normalizeSpanishText]);
   
   // Toggle sound
   const toggleSound = useCallback(() => {
