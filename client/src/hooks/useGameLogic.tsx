@@ -48,30 +48,45 @@ export default function useGameLogic() {
     const randomIndex = Math.floor(Math.random() * wordsRef.current.length);
     return wordsRef.current[randomIndex].word;
   }, []);
-  
-  // Create the sliding word animation
-  const createWordAnimation = useCallback(() => {
+
+  // Create word animation - defined here to avoid circular dependencies
+  function createAnimation() {
     if (!slidingWordRef.current) return;
     
-    // Reset the element
+    // Reset the element - remove any existing inline styles
     slidingWordRef.current.style.animation = 'none';
     slidingWordRef.current.offsetHeight; // Trigger reflow
     
-    // Start new animation
-    slidingWordRef.current.style.animation = `slideLeft ${currentSpeed / 1000}s linear forwards`;
+    // Clear existing animation style
+    slidingWordRef.current.style.animation = '';
+    
+    // Use CSS-based animation with inline custom duration
+    slidingWordRef.current.style.animationName = 'slideLeft';
+    slidingWordRef.current.style.animationDuration = `${currentSpeed / 1000}s`;
+    slidingWordRef.current.style.animationTimingFunction = 'linear';
+    slidingWordRef.current.style.animationFillMode = 'forwards';
     
     // Get the animation object
-    const animations = slidingWordRef.current.getAnimations();
-    if (animations.length > 0) {
-      animationRef.current = animations[0];
-      
-      // Set up animation end listener
-      animationRef.current.onfinish = () => {
-        if (isGameActive && !isGameOver) {
-          endGame();
-        }
-      };
-    }
+    setTimeout(() => { // Add a small delay to ensure animation is registered
+      const animations = slidingWordRef.current?.getAnimations() || [];
+      if (animations.length > 0) {
+        animationRef.current = animations[0];
+        
+        // Set up animation end listener
+        animationRef.current.onfinish = () => {
+          if (isGameActive && !isGameOver) {
+            // End the game when animation finishes
+            setIsGameActive(false);
+            setIsGameOver(true);
+            
+            // Stop any ongoing animations
+            if (animationRef.current) {
+              animationRef.current.pause();
+            }
+          }
+        };
+      }
+    }, 50);
     
     // Pronounce the word after a delay
     if (isSoundEnabled && currentWord) {
@@ -79,21 +94,21 @@ export default function useGameLogic() {
         speakWord(currentWord);
       }, GAME_CONFIG.pronounceDelay);
     }
-  }, [currentWord, currentSpeed, isGameActive, isGameOver, isSoundEnabled]);
+  }
   
-  // Start a new word
-  const startNewWord = useCallback(() => {
+  // Start a new word function
+  function startNew() {
     const word = getRandomWord();
     setCurrentWord(word);
     
     // Schedule animation on next tick to ensure DOM is updated
     setTimeout(() => {
-      createWordAnimation();
+      createAnimation();
     }, 0);
-  }, [getRandomWord, createWordAnimation]);
+  }
   
-  // Handle word completion
-  const handleWordCompletion = useCallback(() => {
+  // Complete current word
+  function completeWord() {
     // Stop current animation
     if (animationRef.current) {
       animationRef.current.pause();
@@ -137,30 +152,23 @@ export default function useGameLogic() {
     setTimeout(() => {
       if (isGameActive && !isGameOver && !newWordStarted) {
         newWordStarted = true;
-        startNewWord();
+        startNew();
       }
     }, 800); // Slightly longer delay to ensure word appears
     
     // Backup timer in case the first one fails
     setTimeout(() => {
       if (isGameActive && !isGameOver && currentWord === "") {
-        startNewWord();
+        startNew();
       }
     }, 2000);
-  }, [currentWord, level, isGameActive, isGameOver, startNewWord]);
+  }
   
-  // End the game
-  const endGame = useCallback(() => {
-    setIsGameActive(false);
-    setIsGameOver(true);
-    
-    // Stop any ongoing animations
-    if (animationRef.current) {
-      animationRef.current.pause();
-    }
-  }, []);
+  // Expose callbacks with proper memoization
+  const startNewWord = useCallback(startNew, [getRandomWord, isGameActive, isGameOver, currentSpeed, isSoundEnabled, currentWord]);
   
-  // Input handling with special Spanish character normalization
+  const handleWordCompletion = useCallback(completeWord, [currentWord, level, isGameActive, isGameOver, startNewWord]);
+  
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const input = e.target.value.toLowerCase();
     setUserInput(input);
@@ -180,15 +188,6 @@ export default function useGameLogic() {
     }
   }, [currentWord, handleWordCompletion]);
   
-  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      if (!isGameActive && !isGameOver) {
-        startGame();
-      }
-    }
-  }, [isGameActive, isGameOver]);
-  
-  // Start the game
   const startGame = useCallback(() => {
     // Reset game state
     setScore(0);
@@ -207,7 +206,14 @@ export default function useGameLogic() {
     startNewWord();
   }, [startNewWord]);
   
-  // Restart the game
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      if (!isGameActive && !isGameOver) {
+        startGame();
+      }
+    }
+  }, [isGameActive, isGameOver, startGame]);
+  
   const restartGame = useCallback(() => {
     setIsGameOver(false);
     setTimeout(() => {
@@ -215,12 +221,10 @@ export default function useGameLogic() {
     }, 300);
   }, [startGame]);
   
-  // Toggle sound
   const toggleSound = useCallback(() => {
     setIsSoundEnabled(prev => !prev);
   }, []);
   
-  // Pronunciate current word
   const pronunciateWord = useCallback(() => {
     if (currentWord && isSoundEnabled) {
       speakWord(currentWord);

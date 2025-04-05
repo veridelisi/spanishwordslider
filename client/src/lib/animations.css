@@ -1,9 +1,9 @@
 @keyframes slideLeft {
   0% {
-    transform: translateX(100%);
+    transform: translateX(120%); /* Start further right */
   }
   100% {
-    transform: translateX(-100%);
+    transform: translateX(-120%); /* End further left */
   }
 }
 
@@ -41,7 +41,7 @@
 }
 
 .animate-slide-left {
-  animation: slideLeft 10s linear forwards;
+  animation: slideLeft 15s linear forwards; /* Default duration, will be overridden by inline style */
 }
 
 .animate-blow-away {

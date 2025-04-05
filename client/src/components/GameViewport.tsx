@@ -26,11 +26,11 @@ const GameViewport: React.FC<GameViewportProps> = ({
   return (
     <div className="game-container p-6 relative">
       {/* Sliding Word Area */}
-      <div className="word-container h-32 flex items-center justify-center rounded-lg bg-slate-100 mb-6 relative shadow-inner perspective-1000 w-full">
+      <div className="word-container h-32 flex items-center justify-center rounded-lg bg-slate-100 mb-6 relative shadow-inner perspective-1000 w-full overflow-hidden">
         <div 
           ref={slidingWordRef}
           className={`absolute font-[Poppins] text-3xl font-semibold tracking-wide flex items-center h-full ${
-            !currentWord ? "hidden" : ""
+            !currentWord ? "hidden" : "animate-slide-left"
           }`}
         >
           {currentWord.split("").map((char, index) => {
