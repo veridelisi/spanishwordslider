@@ -2,6 +2,7 @@ import React from "react";
 import GameHeader from "@/components/GameHeader";
 import GameInterface from "@/components/GameInterface";
 import GameOverModal from "@/components/GameOverModal";
+import SpeedSelector from "@/components/SpeedSelector";
 import useGameLogic from "@/hooks/useGameLogic";
 import { Button } from "@/components/ui/button";
 
@@ -14,6 +15,7 @@ const Game: React.FC = () => {
     isGameActive,
     isGameOver,
     isSoundEnabled,
+    speedSetting,
     slidingWordRef,
     inputRef,
     handleInputChange,
@@ -22,11 +24,12 @@ const Game: React.FC = () => {
     pronunciateWord,
     startGame,
     restartGame,
+    changeGameSpeed,
   } = useGameLogic();
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-to-b from-indigo-50 to-blue-100 font-[Open_Sans]">
-      <div className="w-full max-w-6xl">
+    <div className="min-h-screen flex flex-col items-center justify-center p-2 sm:p-4 bg-gradient-to-b from-indigo-50 to-blue-100 font-[Open_Sans]">
+      <div className="w-full max-w-[95vw] lg:max-w-[90vw]">
         <GameHeader />
         
         {!isGameActive && !isGameOver && (
@@ -40,6 +43,15 @@ const Game: React.FC = () => {
             <p className="text-sm text-slate-500 mt-2">
               or press Enter to begin
             </p>
+            
+            {/* Speed selector */}
+            <div className="mt-6 w-full max-w-md">
+              <SpeedSelector
+                currentSpeed={speedSetting}
+                onChange={changeGameSpeed}
+                disabled={isGameActive}
+              />
+            </div>
           </div>
         )}
         
@@ -62,6 +74,8 @@ const Game: React.FC = () => {
           isGameOver={isGameOver}
           score={score}
           onRestart={restartGame}
+          currentSpeed={speedSetting}
+          onSpeedChange={changeGameSpeed}
         />
       </div>
     </div>

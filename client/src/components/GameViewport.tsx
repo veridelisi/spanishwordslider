@@ -24,12 +24,12 @@ const GameViewport: React.FC<GameViewportProps> = ({
   pronunciateWord,
 }) => {
   return (
-    <div className="game-container p-6 relative">
-      {/* Sliding Word Area - Enhanced with improved styling and better width */}
-      <div className="word-container h-48 flex items-center justify-center rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 mb-8 relative shadow-lg perspective-1000 w-full overflow-hidden border border-indigo-100">
+    <div className="game-container p-3 sm:p-6 relative w-full">
+      {/* Sliding Word Area - Enhanced with improved styling and better width, plus responsive height */}
+      <div className="word-container h-36 sm:h-48 md:h-60 flex items-center justify-center rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 mb-4 sm:mb-8 relative shadow-lg perspective-1000 w-full overflow-hidden border border-indigo-100">
         <div 
           ref={slidingWordRef}
-          className={`absolute font-[Poppins] text-5xl font-semibold tracking-wider flex items-center h-full ${
+          className={`absolute font-[Poppins] text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-semibold tracking-wider flex items-center h-full ${
             !currentWord ? "hidden" : "animate-slide-left"
           }`}
         >
@@ -64,16 +64,16 @@ const GameViewport: React.FC<GameViewportProps> = ({
         {/* Game Start Prompt - now handled in the Game component */}
       </div>
 
-      {/* Input Area */}
-      <div className="flex flex-col items-center">
-        <div className="relative w-full max-w-md mx-auto">
+      {/* Input Area - Made responsive */}
+      <div className="flex flex-col items-center w-full">
+        <div className="relative w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg mx-auto">
           <input
             type="text"
             ref={inputRef}
             value={userInput}
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
-            className="w-full px-4 py-3 text-xl border-2 border-indigo-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 font-[Poppins] transition-all"
+            className="w-full px-3 sm:px-4 py-2 sm:py-3 text-lg sm:text-xl border-2 border-indigo-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 font-[Poppins] transition-all"
             placeholder="Type the word here..."
             autoComplete="off"
             autoCapitalize="none"

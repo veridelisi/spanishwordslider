@@ -1,13 +1,23 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
+import SpeedSelector from "@/components/SpeedSelector";
+import { GameSpeedSetting } from "@/hooks/useGameLogic";
 
 interface GameOverModalProps {
   isGameOver: boolean;
   score: number;
   onRestart: () => void;
+  currentSpeed?: GameSpeedSetting;
+  onSpeedChange?: (speed: GameSpeedSetting) => void;
 }
 
-const GameOverModal: React.FC<GameOverModalProps> = ({ isGameOver, score, onRestart }) => {
+const GameOverModal: React.FC<GameOverModalProps> = ({ 
+  isGameOver, 
+  score, 
+  onRestart,
+  currentSpeed = "medium",
+  onSpeedChange
+}) => {
   if (!isGameOver) return null;
   
   return (
@@ -18,6 +28,18 @@ const GameOverModal: React.FC<GameOverModalProps> = ({ isGameOver, score, onRest
           <p className="text-xl text-slate-700 mb-2">Your score:</p>
           <p className="text-4xl font-bold text-indigo-600 mb-6">{score}</p>
         </div>
+        
+        {/* Speed selector in game over modal */}
+        {onSpeedChange && (
+          <div className="mb-4">
+            <SpeedSelector
+              currentSpeed={currentSpeed}
+              onChange={onSpeedChange}
+              disabled={false}
+            />
+          </div>
+        )}
+        
         <div className="border-t border-slate-200 pt-6 mt-2">
           <p className="text-slate-600 mb-6 text-center">
             You've learned some Spanish words! Want to practice more?

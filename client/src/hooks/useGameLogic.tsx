@@ -3,14 +3,34 @@ import { useQuery } from "@tanstack/react-query";
 import { speakWord } from "@/lib/speechUtils";
 import { Word } from "@shared/schema";
 
-// Game configuration
+// Game configuration with speed presets
+const SPEED_PRESETS = {
+  slow: {
+    baseSpeed: 20000, // Slower speed for beginners
+    speedIncrement: 500,
+    minSpeed: 8000
+  },
+  medium: {
+    baseSpeed: 15000, // Default medium speed
+    speedIncrement: 500,
+    minSpeed: 6000
+  },
+  fast: {
+    baseSpeed: 10000, // Faster speed for advanced players
+    speedIncrement: 400,
+    minSpeed: 4000
+  }
+};
+
+// Initial game configuration
 const GAME_CONFIG = {
-  baseSpeed: 15000, // Base speed for word sliding in ms - slower for better gameplay
-  speedIncrement: 500, // How much to decrease time per level
-  minSpeed: 6000, // Minimum sliding speed - keep it slower
+  ...SPEED_PRESETS.medium, // Default to medium speed
   wordsPerLevel: 5, // Words to complete before level up
   pronounceDelay: 500, // Delay before pronunciation in ms
 };
+
+// Type for game speed settings
+export type GameSpeedSetting = 'slow' | 'medium' | 'fast';
 
 export default function useGameLogic() {
   // Game state
@@ -23,6 +43,7 @@ export default function useGameLogic() {
   const [isGameOver, setIsGameOver] = useState(false);
   const [currentSpeed, setCurrentSpeed] = useState(GAME_CONFIG.baseSpeed);
   const [isSoundEnabled, setIsSoundEnabled] = useState(true);
+  const [speedSetting, setSpeedSetting] = useState<GameSpeedSetting>("medium");
   
   // Refs
   const slidingWordRef = useRef<HTMLDivElement>(null);
@@ -253,6 +274,25 @@ export default function useGameLogic() {
     }
   }, [currentWord, isSoundEnabled]);
   
+  // Function to change the game speed
+  const changeGameSpeed = useCallback((speed: GameSpeedSetting) => {
+    setSpeedSetting(speed);
+    
+    // Update the game configuration based on the selected speed
+    const newConfig = SPEED_PRESETS[speed];
+    
+    // Update the game settings
+    Object.assign(GAME_CONFIG, {
+      ...GAME_CONFIG,
+      ...newConfig
+    });
+    
+    // Update current speed if not in game, otherwise it will update on next level
+    if (!isGameActive) {
+      setCurrentSpeed(newConfig.baseSpeed);
+    }
+  }, [isGameActive]);
+  
   return {
     score,
     level,
@@ -261,6 +301,7 @@ export default function useGameLogic() {
     isGameActive,
     isGameOver,
     isSoundEnabled,
+    speedSetting,
     slidingWordRef,
     inputRef,
     handleInputChange,
@@ -269,5 +310,6 @@ export default function useGameLogic() {
     pronunciateWord,
     startGame,
     restartGame,
+    changeGameSpeed,
   };
 }
