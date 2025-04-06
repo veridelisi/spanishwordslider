@@ -69,12 +69,11 @@ npm run dev
 
 MIT License - Feel free to use and modify
 
-## Developer
+## Developer<br>
+Engin Yılmaz (@veridelisi)<br>
+www.ispanyol.com<br>
+https://veridelisi.substack.com/<br><br>
+## Country<br>
+2025 April<br>
+Ankara
 
--Engin Yılmaz (@veridelisi)
--www.ispanyol.com
--https://veridelisi.substack.com/
-
-## Country
--2025 April
--Ankara
