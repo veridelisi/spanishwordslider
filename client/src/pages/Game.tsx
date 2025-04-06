@@ -141,11 +141,11 @@ const Game: React.FC = () => {
               <span className="text-xs text-slate-500">136+</span>
             </div>
             <div className="flex items-center gap-1">
-              <img src="https://www.google.com/chrome/static/images/chrome-logo.svg" alt="Edge" className="w-5 h-5" />
-              <span className="text-xs text-slate-500">134+</span>
+              <img src="https://www.paraanaliz.com/wp-content/uploads/2025/04/microsoft.png" alt="Edge" className="w-5 h-5" />
+              <span className="text-xs text-slate-500">134</span>
             </div>
             <div className="flex items-center gap-1">
-              <img src="https://assets.opera.com/graphics/opera-logo-sprite.png" alt="Opera" className="w-5 h-5" />
+              <img src="https://www.paraanaliz.com/wp-content/uploads/2025/04/opera.png" alt="Opera" className="w-5 h-5" />
               <span className="text-xs text-slate-500">117+</span>
             </div>
           </div>
