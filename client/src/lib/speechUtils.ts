@@ -94,16 +94,52 @@ export function getUseExternalApi(): boolean {
  * Enhanced with Solution 1 for better voice loading reliability
  */
 export async function speakWord(word: string): Promise<void> {
-  // If external API is preferred, use it directly
-  if (useExternalApiFlag) {
+  // Cancel any ongoing speech first
+  if (typeof window !== 'undefined' && window.speechSynthesis) {
+    window.speechSynthesis.cancel();
+  }
+
+  // Try Web Speech API first if not flagged for external
+  if (!useExternalApiFlag) {
     try {
-      console.log("Using external TTS API for:", word);
-      await speakTextWithExternalApi(word, 'es');
-      return;
+      if (!isSpeechSupported()) {
+        throw new Error("Speech synthesis not supported");
+      }
+      
+      const utterance = new SpeechSynthesisUtterance(word);
+      utterance.lang = 'es-ES';
+      utterance.rate = 0.8;
+      utterance.pitch = 1.0;
+      
+      const voices = window.speechSynthesis.getVoices();
+      const spanishVoice = voices.find(voice => voice.lang.startsWith('es'));
+      
+      if (spanishVoice) {
+        utterance.voice = spanishVoice;
+        await new Promise<void>((resolve, reject) => {
+          utterance.onend = () => resolve();
+          utterance.onerror = () => {
+            useExternalApiFlag = true;
+            reject(new Error("Speech synthesis failed"));
+          };
+          window.speechSynthesis.speak(utterance);
+        });
+        return;
+      }
     } catch (error) {
-      console.error("External TTS API failed, trying Web Speech API:", error);
-      // Fall through to Web Speech API as last resort
+      console.log("Web Speech API failed, switching to external API");
+      useExternalApiFlag = true;
     }
+  }
+
+  // Use external API as fallback
+  try {
+    console.log("Using external TTS API for:", word);
+    await speakTextWithExternalApi(word, 'es');
+  } catch (error) {
+    console.error("All speech methods failed:", error);
+    // Reset the flag to try Web Speech API again next time
+    useExternalApiFlag = false;
   }
 
   // Try Web Speech API
