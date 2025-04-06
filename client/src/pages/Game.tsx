@@ -129,7 +129,8 @@ const Game: React.FC = () => {
       <footer className="bg-white border-t border-slate-200 py-3">
         <div className="container mx-auto px-4">
           <p className="text-sm text-center text-slate-500">
-            Spanish Word Game | Learn, Practice & Have Fun
+            Spanish Word Game | Learn, Practice & Have Fun<br />
+            Developed by Engin Yılmaz · <a href="https://www.ispanyol.com" target="_blank" rel="noopener noreferrer" className="text-indigo-500 hover:text-indigo-600">www.ispanyol.com</a>
           </p>
           <div className="flex justify-center items-center gap-4 mt-2">
             <div className="flex items-center gap-1">
