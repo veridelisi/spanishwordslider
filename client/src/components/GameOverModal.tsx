@@ -31,12 +31,13 @@ const GameOverModal: React.FC<GameOverModalProps> = ({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-center text-2xl font-bold">Game Over</DialogTitle>
-          <DialogDescription className="text-center">
-            <div className="mt-4 mb-6">
-              <p className="text-lg font-medium">Your Score</p>
-              <p className="text-3xl font-bold text-indigo-600">{score}</p>
-            </div>
+          <DialogDescription className="text-center sr-only">
+            Game over summary and score
           </DialogDescription>
+          <div className="mt-4 mb-6 text-center">
+            <div className="text-lg font-medium">Your Score</div>
+            <div className="text-3xl font-bold text-indigo-600">{score}</div>
+          </div>
         </DialogHeader>
         
         <div className="flex flex-col space-y-4">
