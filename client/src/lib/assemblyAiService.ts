@@ -2,72 +2,51 @@ import axios from 'axios';
 
 const ASSEMBLY_AI_API_KEY = 'a35df6d6a0694f779cd69f7a37b6cdd1';
 
-// Since AssemblyAI doesn't directly offer TTS in their JavaScript client,
-// we'll use another compatible free TTS API (Libretranslate) that can work in the browser
-// This is a fallback solution when Web Speech API doesn't work
-
-const LIBRE_TRANSLATE_API = 'https://libretranslate.com/api/tts';
+// We'll use Google Translate Text-to-Speech API which works directly in browsers
+// This is available without API keys through the Audio constructor and is compatible
+// with Chrome's security restrictions
 
 /**
- * Use LibreTranslate's TTS API to speak text
+ * Use Google Translate's TTS service which works in all browsers 
  * This is a fallback for Web Speech API
  * 
  * @param text The text to speak
  * @param lang The language code (e.g., 'es' for Spanish)
- * @returns Promise resolving to the audio URL, or null if it failed
+ * @returns Promise resolving to the audio element ready to play
  */
-export async function getTextToSpeechAudio(text: string, lang: string = 'es'): Promise<string | null> {
-  try {
-    // Create a URL with the necessary parameters
-    const params = new URLSearchParams({
-      q: text,
-      lang: lang
-    });
-
-    // For monitoring only - not using AssemblyAI API key in request
-    console.log(`Using external TTS for: "${text}" in language: ${lang}`);
-
-    // Request text-to-speech from LibreTranslate
-    const response = await axios.get(`${LIBRE_TRANSLATE_API}?${params.toString()}`, {
-      responseType: 'blob',  // Get response as a blob
-      headers: {
-        'Accept': 'audio/mp3',
-      }
-    });
-
-    if (response.status !== 200) {
-      throw new Error(`Failed to get TTS: ${response.status}`);
-    }
-
-    // Create an object URL from the audio blob
-    const audioBlob = new Blob([response.data], { type: 'audio/mp3' });
-    const audioUrl = URL.createObjectURL(audioBlob);
-    
-    return audioUrl;
-  } catch (error) {
-    console.error('Error getting TTS audio:', error);
-    return null;
-  }
+export async function getTextToSpeechAudio(text: string, lang: string = 'es'): Promise<HTMLAudioElement> {
+  console.log(`Using Google TTS for: "${text}" in language: ${lang}`);
+  
+  // Create a URL for Google's TTS service
+  const encodedText = encodeURIComponent(text);
+  const audioUrl = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${lang}&q=${encodedText}`;
+  
+  // Create an audio element
+  const audio = new Audio();
+  audio.src = audioUrl;
+  audio.crossOrigin = "anonymous"; 
+  
+  // Pre-load the audio
+  return new Promise((resolve, reject) => {
+    audio.oncanplaythrough = () => resolve(audio);
+    audio.onerror = (e) => reject(new Error(`Failed to load audio: ${e}`));
+    audio.load();
+  });
 }
 
 /**
- * Play audio from a URL
+ * Play audio from an Audio element
  * 
- * @param audioUrl URL of the audio to play
+ * @param audio HTMLAudioElement to play
  * @returns Promise that resolves when audio finishes playing, or rejects if it fails
  */
-export function playAudio(audioUrl: string): Promise<void> {
+export function playAudio(audio: HTMLAudioElement): Promise<void> {
   return new Promise((resolve, reject) => {
-    const audio = new Audio(audioUrl);
-    
     audio.onended = () => {
-      // Clean up object URL to avoid memory leaks
-      URL.revokeObjectURL(audioUrl);
       resolve();
     };
     
     audio.onerror = (error) => {
-      URL.revokeObjectURL(audioUrl);
       reject(error);
     };
     
@@ -84,12 +63,9 @@ export function playAudio(audioUrl: string): Promise<void> {
  */
 export async function speakTextWithExternalApi(text: string, lang: string = 'es'): Promise<void> {
   try {
-    const audioUrl = await getTextToSpeechAudio(text, lang);
-    if (audioUrl) {
-      await playAudio(audioUrl);
-      return;
-    }
-    throw new Error('Failed to get audio URL');
+    const audio = await getTextToSpeechAudio(text, lang);
+    await playAudio(audio);
+    return;
   } catch (error) {
     console.error('Error speaking with external API:', error);
     throw error;

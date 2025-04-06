@@ -2,8 +2,6 @@ import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Volume2 } from "lucide-react";
 import ExplosionEffect from "./ExplosionEffect";
-import VirtualKeyboard from "./VirtualKeyboard";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { isSpeechSupported, getUseExternalApi, forceExternalApi } from "@/lib/speechUtils";
 
 interface GameViewportProps {
@@ -32,7 +30,6 @@ const GameViewport: React.FC<GameViewportProps> = ({
   const [explosionCounter, setExplosionCounter] = useState(0);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isExternalApi, setIsExternalApi] = useState(getUseExternalApi());
-  const isMobile = useIsMobile();
   
   // Force external API on component mount if speech is not supported
   useEffect(() => {
@@ -60,62 +57,7 @@ const GameViewport: React.FC<GameViewportProps> = ({
     setIsExternalApi(getUseExternalApi());
   };
   
-  // Handle virtual keyboard key press
-  const handleVirtualKeyPress = (key: string) => {
-    if (!isGameActive || !inputRef.current) return;
-    
-    // Create a synthetic event for the input change
-    const newValue = userInput + key;
-    const syntheticEvent = {
-      target: { value: newValue },
-      preventDefault: () => {},
-    } as React.ChangeEvent<HTMLInputElement>;
-    
-    handleInputChange(syntheticEvent);
-    
-    // Keep focus on the input field after clicking the virtual keyboard
-    if (inputRef.current) {
-      inputRef.current.focus();
-    }
-  };
-  
-  // Handle virtual keyboard backspace
-  const handleVirtualBackspace = () => {
-    if (!isGameActive || !inputRef.current) return;
-    
-    // Remove the last character
-    const newValue = userInput.slice(0, -1);
-    const syntheticEvent = {
-      target: { value: newValue },
-      preventDefault: () => {},
-    } as React.ChangeEvent<HTMLInputElement>;
-    
-    handleInputChange(syntheticEvent);
-    
-    // Keep focus on the input
-    if (inputRef.current) {
-      inputRef.current.focus();
-    }
-  };
-  
-  // Handle virtual keyboard space
-  const handleVirtualSpace = () => {
-    if (!isGameActive || !inputRef.current) return;
-    
-    // Add a space
-    const newValue = userInput + " ";
-    const syntheticEvent = {
-      target: { value: newValue },
-      preventDefault: () => {},
-    } as React.ChangeEvent<HTMLInputElement>;
-    
-    handleInputChange(syntheticEvent);
-    
-    // Keep focus on the input
-    if (inputRef.current) {
-      inputRef.current.focus();
-    }
-  };
+  // All virtual keyboard handlers removed
 
   // Track user input to detect word completion
   useEffect(() => {
@@ -263,17 +205,7 @@ const GameViewport: React.FC<GameViewportProps> = ({
         />
       ))}
       
-      {/* Virtual Keyboard for mobile devices */}
-      {isMobile && (
-        <div className="mt-4 sm:mt-6">
-          <VirtualKeyboard
-            onKeyPress={handleVirtualKeyPress}
-            onBackspace={handleVirtualBackspace}
-            onSpace={handleVirtualSpace}
-            disabled={!isGameActive}
-          />
-        </div>
-      )}
+      {/* Virtual Keyboard completely removed as requested */}
     </div>
   );
 };
