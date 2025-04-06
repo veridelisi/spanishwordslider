@@ -71,10 +71,10 @@ MIT License - Feel free to use and modify
 
 ## Developer
 
-Engin Yılmaz (@veridelisi)
-www.ispanyol.com
-https://veridelisi.substack.com/
+-Engin Yılmaz (@veridelisi)
+-www.ispanyol.com
+-https://veridelisi.substack.com/
 
 ## Country
-2025 April
-Ankara
+-2025 April
+-Ankara
