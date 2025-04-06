@@ -27,7 +27,7 @@ const GameOverModal: React.FC<GameOverModalProps> = ({
   onSpeedChange
 }) => {
   return (
-    <Dialog open={isGameOver} onOpenChange={() => {}}>
+    <Dialog open={isGameOver} onOpenChange={() => onRestart()}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-center text-2xl font-bold">Game Over</DialogTitle>
