@@ -129,9 +129,26 @@ const Game: React.FC = () => {
       <footer className="bg-white border-t border-slate-200 py-3">
         <div className="container mx-auto px-4">
           <p className="text-sm text-center text-slate-500">
-            Spanish Word Game | Learn, Practice & Have Fun<br />
-            <a href="https://www.ispanyol.com" target="_blank" rel="noopener noreferrer" className="text-indigo-500 hover:text-indigo-600">www.ispanyol.com</a>
+            Spanish Word Game | Learn, Practice & Have Fun
           </p>
+          <div className="flex justify-center items-center gap-4 mt-2">
+            <div className="flex items-center gap-1">
+              <img src="https://www.google.com/chrome/static/images/chrome-logo.svg" alt="Chrome" className="w-5 h-5" />
+              <span className="text-xs text-slate-500">134+</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <img src="https://www.mozilla.org/media/protocol/img/logos/firefox/browser/logo-sm.f2523d97cbe0.png" alt="Firefox" className="w-5 h-5" />
+              <span className="text-xs text-slate-500">136+</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <img src="https://www.google.com/chrome/static/images/chrome-logo.svg" alt="Edge" className="w-5 h-5" />
+              <span className="text-xs text-slate-500">134+</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <img src="https://assets.opera.com/graphics/opera-logo-sprite.png" alt="Opera" className="w-5 h-5" />
+              <span className="text-xs text-slate-500">117+</span>
+            </div>
+          </div>
         </div>
       </footer>
       
